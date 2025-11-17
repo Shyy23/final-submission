@@ -49,7 +49,6 @@
                             <i class="fas fa-sign-in-alt mr-2"></i>
                             Login
                         </a>
-
                         @if (Route::has('register'))
                         <a href="{{ route('register') }}"
                             class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-lg shadow-md transition-all duration-300">
@@ -70,12 +69,14 @@
 
                 <!-- Hero Section -->
                 <div class="text-center mb-16">
-                    <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl shadow-lg mb-6">
+                    <div
+                        class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl shadow-lg mb-6">
                         <i class="fas fa-graduation-cap text-4xl text-white"></i>
                     </div>
                     <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
                         Sistem Pengajuan
-                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500">Tugas Akhir</span>
+                        <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500">Tugas
+                            Akhir</span>
                     </h1>
                     <p class="text-lg text-gray-600 max-w-2xl mx-auto">
                         Platform modern untuk mengelola pengajuan surat tugas akhir mahasiswa dengan mudah dan efisien
@@ -85,8 +86,10 @@
                 <!-- Features Grid -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
                     <!-- Feature 1 -->
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow duration-300">
-                        <div class="w-12 h-12 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl flex items-center justify-center mb-4">
+                    <div
+                        class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow duration-300">
+                        <div
+                            class="w-12 h-12 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl flex items-center justify-center mb-4">
                             <i class="fas fa-file-alt text-2xl text-blue-500"></i>
                         </div>
                         <h3 class="text-lg font-semibold text-gray-800 mb-2">Pengajuan Mudah</h3>
@@ -96,8 +99,10 @@
                     </div>
 
                     <!-- Feature 2 -->
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow duration-300">
-                        <div class="w-12 h-12 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl flex items-center justify-center mb-4">
+                    <div
+                        class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow duration-300">
+                        <div
+                            class="w-12 h-12 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl flex items-center justify-center mb-4">
                             <i class="fas fa-circle-check text-2xl text-emerald-500"></i>
                         </div>
                         <h3 class="text-lg font-semibold text-gray-800 mb-2">Tracking Real-time</h3>
@@ -107,8 +112,10 @@
                     </div>
 
                     <!-- Feature 3 -->
-                    <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow duration-300">
-                        <div class="w-12 h-12 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl flex items-center justify-center mb-4">
+                    <div
+                        class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow duration-300">
+                        <div
+                            class="w-12 h-12 bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl flex items-center justify-center mb-4">
                             <i class="fas fa-signature text-2xl text-purple-500"></i>
                         </div>
                         <h3 class="text-lg font-semibold text-gray-800 mb-2">Tanda Tangan Digital</h3>
@@ -120,7 +127,8 @@
 
                 <!-- CTA Section -->
                 @guest
-                <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl shadow-sm p-8 border border-emerald-100 text-center">
+                <div
+                    class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl shadow-sm p-8 border border-emerald-100 text-center">
                     <h2 class="text-2xl font-bold text-gray-800 mb-3">
                         Siap Memulai?
                     </h2>
@@ -143,7 +151,8 @@
                 @endguest
 
                 @auth
-                <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl shadow-sm p-8 border border-emerald-100 text-center">
+                <div
+                    class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl shadow-sm p-8 border border-emerald-100 text-center">
                     <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full shadow-md mb-4">
                         <i class="fas fa-circle-check text-3xl text-emerald-500"></i>
                     </div>
