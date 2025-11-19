@@ -8,7 +8,7 @@ class Student extends Model
 {
     protected $table = 'students';
     protected $primaryKey = 'nim';
-    protected $fillable = ['nim', 'study_id', 'user_id'];
+    protected $fillable = ['nim', 'study_id', 'user_id', 'ktm_path'];
     public $incrementing = false;
     public $timestamps = true;
 

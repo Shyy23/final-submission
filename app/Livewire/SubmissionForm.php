@@ -10,7 +10,9 @@ use App\Models\SubmissionMember;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
+use Livewire\Attributes\Layout;
 
+#[Layout('layouts.app')]
 class SubmissionForm extends Component
 {
     public $company_name;
@@ -192,7 +194,6 @@ class SubmissionForm extends Component
         return view('livewire.submission.submission-form', [
             'studyPrograms' => $studyPrograms,
             'currentUser' => Auth::user()
-        ])
-            ->layout('layouts.app');
+        ]);
     }
 }

@@ -1,143 +1,184 @@
 <?php
 
-                                                                                                                                                    use App\Models\Leader;
-                                                                                                                                                    use App\Models\Position;
-                                                                                                                                                    use App\Models\Student;
-                                                                                                                                                    use App\Models\StudyProgram;
-                                                                                                                                                    use App\Models\User;
-                                                                                                                                                    use Illuminate\Support\Facades\Auth;
-                                                                                                                                                    use Illuminate\Support\Facades\Session;
-                                                                                                                                                    use Illuminate\Validation\Rule;
-                                                                                                                                                    use Livewire\Volt\Component;
+use App\Models\Leader;
+use App\Models\Position;
+use App\Models\Student;
+use App\Models\StudyProgram;
+use App\Models\User;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\Rule;
+use Livewire\Volt\Component;
+use Livewire\WithFileUploads;
+use Livewire\Attributes\Computed; // TAMBAHKAN INI
 
-                                                                                                                                                    new class extends Component
-                                                                                                                                                    {
-                                                                                                                                                        public string $name = '';
-                                                                                                                                                        public string $email = '';
+new class extends Component
+{
+    use WithFileUploads;
 
-                                                                                                                                                        // Properti untuk mahasiswa
-                                                                                                                                                        public string $nim = '';
-                                                                                                                                                        public $study_id = null;
-                                                                                                                                                        public $studyPrograms = [];
+    public string $name = '';
+    public string $email = '';
 
-                                                                                                                                                        // Properti untuk pimpinan
-                                                                                                                                                        public string $nid = '';
-                                                                                                                                                        public $position_id = null;
-                                                                                                                                                        public $positions = [];
+    // Properti Mahasiswa
+    public string $nim = '';
+    public $study_id = null;
+    // public $studyPrograms = []; // HAPUS INI (Diganti Computed)
+    public $ktm; 
+    public $old_ktm_path; 
 
-                                                                                                                                                        // simpan data asli
-                                                                                                                                                        private ?Student $existingStudent = null;
-                                                                                                                                                        private ?Leader $existingLeader = null;
+    // Properti Pimpinan
+    public string $nid = '';
+    public $position_id = null;
+    // public $positions = []; // HAPUS INI (Diganti Computed)
 
-                                                                                                                                                        /**
-                                                                                                                                                         * Mount the component.
-                                                                                                                                                         */
-                                                                                                                                                        public function mount(): void
-                                                                                                                                                        {
-                                                                                                                                                            $user = Auth::user();
+    public function mount(): void
+    {
+        $user = Auth::user();
+        $this->name = $user->name;
+        $this->email = $user->email;
 
-                                                                                                                                                            $this->name = Auth::user()->name;
-                                                                                                                                                            $this->email = Auth::user()->email;
+        if ($user->hasRole('mahasiswa')) {
+            // HAPUS PENGISIAN MANUAL ARRAY DI SINI
+            // $this->studyPrograms = ... (Tidak perlu lagi)
+            
+            $student = Student::where('user_id', $user->id)->first();
 
-                                                                                                                                                            // update profile mahasiswa
-                                                                                                                                                            if ($user->hasRole('mahasiswa')) {
-                                                                                                                                                                $this->studyPrograms = StudyProgram::orderBy('study_name')->get();
+            if ($student) {
+                $this->nim = $student->nim;
+                $this->study_id = $student->study_id;
+                $this->old_ktm_path = $student->ktm_path;
+            }
+        }
 
-                                                                                                                                                                $this->existingStudent = Student::where('user_id', $user->id)->first();
-                                                                                                                                                                if ($this->existingStudent) {
-                                                                                                                                                                    $this->nim = $this->existingStudent->nim;
-                                                                                                                                                                    $this->study_id = $this->existingStudent->study_id;
-                                                                                                                                                                }
-                                                                                                                                                            }
+        if ($user->hasRole('pimpinan')) {
+            // HAPUS PENGISIAN MANUAL ARRAY DI SINI
+            // $this->positions = ... (Tidak perlu lagi)
+            
+            $leader = Leader::where('user_id', $user->id)->first();
+            
+            if ($leader) {
+                $this->nid = $leader->nid;
+                $this->position_id = $leader->position_id;
+            }
+        }
+    }
 
-                                                                                                                                                            // update profile pimpinan
-                                                                                                                                                            if ($user->hasRole('pimpinan')) {
-                                                                                                                                                                $this->positions = Position::orderBy('position_name')->get();
+    // TAMBAHKAN COMPUTED PROPERTY UNTUK STUDI
+    // Data ini akan di-cache dan tidak dikirim bolak-balik saat upload
+    #[Computed]
+    public function studyPrograms()
+    {
+        return StudyProgram::orderBy('study_name')->get();
+    }
 
-                                                                                                                                                                $this->existingLeader = Leader::where('user_id', $user->id)->first();
-                                                                                                                                                                if ($this->existingLeader) {
-                                                                                                                                                                    $this->nid = $this->existingLeader->nid;
-                                                                                                                                                                    $this->position_id = $this->existingLeader->position_id;
-                                                                                                                                                                }
-                                                                                                                                                            }
-                                                                                                                                                        }
+    // TAMBAHKAN COMPUTED PROPERTY UNTUK JABATAN
+    #[Computed]
+    public function positions()
+    {
+        return Position::orderBy('position_name')->get();
+    }
 
-                                                                                                                                                        /**
-                                                                                                                                                         * Update the profile information for the currently authenticated user.
-                                                                                                                                                         */
-                                                                                                                                                        public function updateProfileInformation(): void
-                                                                                                                                                        {
-                                                                                                                                                            $user = Auth::user();
+    public function updateProfileInformation(): void
+    {
+        $user = Auth::user();
 
-                                                                                                                                                            $rules = [
-                                                                                                                                                                'name' => ['required', 'string', 'max:255'],
-                                                                                                                                                                'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
-                                                                                                                                                            ];
+        $rules = [
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
+        ];
 
-                                                                                                                                                            // validasi tambahan untuk mahasiswa
-                                                                                                                                                            if ($user->hasRole('mahasiswa')) {
-                                                                                                                                                                $rules = array_merge($rules, [
-                                                                                                                                                                    'nim' => ['required', 'string', 'min:10', 'max:11', Rule::unique(Student::class, 'nim')->ignore($this->existingStudent?->nim, 'nim')],
-                                                                                                                                                                    'study_id' => ['required', 'exists:study_programs,study_id']
-                                                                                                                                                                ]);
-                                                                                                                                                            }
+        if ($user->hasRole('mahasiswa')) {
+            $currentStudentNim = Student::where('user_id', $user->id)->value('nim');
 
-                                                                                                                                                            if ($user->hasRole('pimpinan')) {
-                                                                                                                                                                $rules = array_merge($rules, [
-                                                                                                                                                                    'nid' => ['required', 'string', 'min:10', 'max:11', Rule::unique(Leader::class, 'nid')->ignore($this->existingLeader?->nid, 'nid')],
-                                                                                                                                                                    'position_id' => ['required', 'exists:positions,position_id'],
-                                                                                                                                                                ]);
-                                                                                                                                                            }
+            $rules = array_merge($rules, [
+                'nim' => [
+                    'required', 
+                    'string', 
+                    'min:10', 
+                    'max:11', 
+                    Rule::unique(Student::class, 'nim')->ignore($currentStudentNim, 'nim')
+                ],
+                'study_id' => ['required', 'exists:study_programs,study_id'],
+                'ktm' => ['nullable', 'image', 'max:2048'], 
+            ]);
+        }
 
-                                                                                                                                                            $validated = $this->validate($rules);
+        if ($user->hasRole('pimpinan')) {
+            $currentLeaderNid = Leader::where('user_id', $user->id)->value('nid');
 
-                                                                                                                                                            $user->fill($validated);
+            $rules = array_merge($rules, [
+                'nid' => [
+                    'required', 
+                    'string', 
+                    'min:10', 
+                    'max:11', 
+                    Rule::unique(Leader::class, 'nid')->ignore($currentLeaderNid, 'nid')
+                ],
+                'position_id' => ['required', 'exists:positions,position_id'],
+            ]);
+        }
 
-                                                                                                                                                            if ($user->isDirty('email')) {
-                                                                                                                                                                $user->email_verified_at = null;
-                                                                                                                                                            }
+        $validated = $this->validate($rules);
 
-                                                                                                                                                            $user->save();
+        $user->fill([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+        ]);
 
-                                                                                                                                                            if ($user->hasRole('mahasiswa')) {
-                                                                                                                                                                Student::updateOrCreate([
-                                                                                                                                                                    'user_id' => $user->id
-                                                                                                                                                                ], [
-                                                                                                                                                                    'nim' => $validated['nim'],
-                                                                                                                                                                    'study_id' => $validated['study_id']
-                                                                                                                                                                ]);
-                                                                                                                                                            }
+        if ($user->isDirty('email')) {
+            $user->email_verified_at = null;
+        }
 
-                                                                                                                                                            if ($user->hasRole('pimpinan')) {
-                                                                                                                                                                Leader::updateOrCreate([
-                                                                                                                                                                    'user_id' => $user->id
-                                                                                                                                                                ], [
-                                                                                                                                                                    'nid' => $validated['nid'],
-                                                                                                                                                                    'position_id' => $validated['position_id']
-                                                                                                                                                                ]);
-                                                                                                                                                            }
+        $user->save();
 
-                                                                                                                                                            $this->dispatch('profile-updated', name: $user->name);
-                                                                                                                                                        }
+        if ($user->hasRole('mahasiswa')) {
+            $ktmPath = $this->old_ktm_path;
 
-                                                                                                                                                        /**
-                                                                                                                                                         * Send an email verification notification to the current user.
-                                                                                                                                                         */
-                                                                                                                                                        public function sendVerification(): void
-                                                                                                                                                        {
-                                                                                                                                                            $user = Auth::user();
+            if ($this->ktm) {
+                if ($this->old_ktm_path && Storage::disk('public')->exists($this->old_ktm_path)) {
+                    Storage::disk('public')->delete($this->old_ktm_path);
+                }
+                $ktmPath = $this->ktm->store('ktm', 'public');
+            }
 
-                                                                                                                                                            if ($user->hasVerifiedEmail()) {
-                                                                                                                                                                $this->redirectIntended(default: route('dashboard', absolute: false));
+            Student::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'nim' => $validated['nim'],
+                    'study_id' => $validated['study_id'],
+                    'ktm_path' => $ktmPath,
+                ]
+            );
+            
+            $this->old_ktm_path = $ktmPath;
+            $this->ktm = null; 
+        }
 
-                                                                                                                                                                return;
-                                                                                                                                                            }
+        if ($user->hasRole('pimpinan')) {
+            Leader::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'nid' => $validated['nid'],
+                    'position_id' => $validated['position_id']
+                ]
+            );
+        }
 
-                                                                                                                                                            $user->sendEmailVerificationNotification();
+        $this->dispatch('profile-updated', name: $user->name);
+    }
 
-                                                                                                                                                            Session::flash('status', 'verification-link-sent');
-                                                                                                                                                        }
-                                                                                                                                                    }; ?>
+    public function sendVerification(): void
+    {
+        $user = Auth::user();
+        if ($user->hasVerifiedEmail()) {
+            $this->redirectIntended(default: route('dashboard', absolute: false));
+            return;
+        }
+        $user->sendEmailVerificationNotification();
+        Session::flash('status', 'verification-link-sent');
+    }
+}; ?>
 
 <section>
     <form wire:submit="updateProfileInformation" class="space-y-6">
@@ -145,8 +186,7 @@
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
                 <label for="name" class="block text-sm font-semibold text-gray-700 mb-2">
-                    <i class="fas fa-user text-gray-400 mr-2"></i>
-                    Nama Lengkap
+                    <i class="fas fa-user text-gray-400 mr-2"></i> Nama Lengkap
                 </label>
                 <input wire:model="name" id="name" name="name" type="text"
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
@@ -156,31 +196,22 @@
 
             <div>
                 <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">
-                    <i class="fas fa-envelope text-gray-400 mr-2"></i>
-                    Email Address
+                    <i class="fas fa-envelope text-gray-400 mr-2"></i> Email Address
                 </label>
                 <input wire:model="email" id="email" name="email" type="email"
                     class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                     required autocomplete="username" />
                 <x-input-error class="mt-2" :messages="$errors->get('email')" />
 
+                {{-- Area Verifikasi Email --}}
                 @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && !
                 auth()->user()->hasVerifiedEmail())
                 <div class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p class="text-sm text-amber-800 flex items-center">
-                        <i class="fas fa-exclamation-circle mr-2"></i>
-                        Email Anda belum diverifikasi.
-                        <button wire:click.prevent="sendVerification"
-                            class="ml-2 underline text-amber-900 hover:text-amber-700 font-medium">
-                            Kirim ulang email verifikasi
-                        </button>
+                    <p class="text-sm text-amber-800">Email belum diverifikasi.
+                        <button wire:click.prevent="sendVerification" class="underline font-bold">Kirim ulang</button>
                     </p>
-
                     @if (session('status') === 'verification-link-sent')
-                    <p class="mt-2 text-sm text-emerald-700 flex items-center">
-                        <i class="fas fa-circle-check mr-2"></i>
-                        Link verifikasi baru telah dikirim ke email Anda.
-                    </p>
+                    <p class="mt-2 text-sm text-emerald-700 font-bold">Link terkirim!</p>
                     @endif
                 </div>
                 @endif
@@ -188,7 +219,7 @@
         </div>
 
         @role('mahasiswa')
-        {{-- Mahasiswa Data Section --}}
+        {{-- Mahasiswa Data --}}
         <div class="pt-6 border-t border-gray-200">
             <div class="flex items-center mb-6">
                 <div
@@ -203,72 +234,131 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label for="nim" class="block text-sm font-semibold text-gray-700 mb-2">
-                        <i class="fas fa-id-card text-gray-400 mr-2"></i>
-                        NIM (Nomor Induk Mahasiswa)
-                    </label>
-                    <input wire:model="nim" id="nim" name="nim" type="text"
-                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                        placeholder="Contoh: 1234567890" required />
+                    <label for="nim" class="block text-sm font-semibold text-gray-700 mb-2">NIM</label>
+                    <input wire:model="nim" id="nim" type="text"
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 transition-all"
+                        placeholder="contoh : 1234567890" required />
                     <x-input-error class="mt-2" :messages="$errors->get('nim')" />
                 </div>
 
                 <div>
-                    <label for="study_id" class="block text-sm font-semibold text-gray-700 mb-2">
-                        <i class="fas fa-book text-gray-400 mr-2"></i>
-                        Program Studi
-                    </label>
-                    <select wire:model="study_id" id="study_id" name="study_id"
-                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-gray-800"
+                    <label for="study_id" class="block text-sm font-semibold text-gray-700 mb-2">Program Studi</label>
+                    <select wire:model="study_id" id="study_id"
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 transition-all"
                         required>
-                        <option value="">-- Pilih Program Studi --</option>
-                        @foreach($studyPrograms as $program)
+                        <option value="">-- Pilih Prodi --</option>
+                        {{-- UBAH LOOPING UNTUK MENGGUNAKAN COMPUTED PROPERTY --}}
+                        @foreach($this->studyPrograms as $program)
                         <option value="{{ $program->study_id }}">{{ $program->study_name }}</option>
                         @endforeach
                     </select>
                     <x-input-error class="mt-2" :messages="$errors->get('study_id')" />
+                </div>
+
+                {{-- UPLOAD KTM DENGAN VALIDASI BROWSER (ANTI-CRASH) --}}
+                <div class="md:col-span-2" x-data="{ 
+                        uploading: false, 
+                        progress: 0, 
+                        errorMessage: null,
+                        uploadFile(event) {
+                            const file = event.target.files[0];
+                            if (!file) return;
+
+                            // 1. VALIDASI UKURAN DI BROWSER
+                            if (file.size > 2 * 1024 * 1024) {
+                                this.errorMessage = 'File terlalu besar! Maksimal 2MB.';
+                                event.target.value = ''; // Reset input
+                                return;
+                            }
+
+                            // 2. UPLOAD MANUAL
+                            this.uploading = true;
+                            this.errorMessage = null;
+
+                            $wire.upload('ktm', file, 
+                                () => {
+                                    this.uploading = false;
+                                    this.errorMessage = null;
+                                },
+                                () => {
+                                    this.uploading = false;
+                                    this.errorMessage = 'Gagal upload. Silakan coba lagi.';
+                                    event.target.value = '';
+                                },
+                                (event) => {
+                                    this.progress = event.detail.progress;
+                                }
+                            );
+                        }
+                     }">
+
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Kartu Tanda Mahasiswa (KTM)</label>
+
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0 relative">
+                            @if ($ktm)
+                            <img src="{{ $ktm->temporaryUrl() }}"
+                                class="w-32 h-20 object-cover rounded-lg border shadow-sm">
+                            <div class="text-xs text-emerald-600 mt-1 text-center">Preview Baru</div>
+                            @elseif ($old_ktm_path)
+                            <img src="{{ asset('storage/' . $old_ktm_path) }}"
+                                class="w-32 h-20 object-cover rounded-lg border shadow-sm">
+                            <div class="text-xs text-gray-500 mt-1 text-center">Saat Ini</div>
+                            @else
+                            <div
+                                class="w-32 h-20 bg-gray-100 rounded-lg border-2 border-dashed flex items-center justify-center text-gray-400 text-xs">
+                                Kosong</div>
+                            @endif
+
+                            {{-- Progress Bar Overlay --}}
+                            <div x-show="uploading"
+                                class="absolute inset-0 bg-white/90 flex flex-col items-center justify-center rounded-lg z-10"
+                                style="display: none;">
+                                <i class="fas fa-circle-notch fa-spin text-emerald-500 text-xl mb-1"></i>
+                                <span class="text-xs font-bold text-emerald-600" x-text="progress + '%'"></span>
+                            </div>
+                        </div>
+
+                        <div class="flex-1">
+                            <input type="file" accept="image/png, image/jpeg, image/jpg"
+                                x-on:change="uploadFile($event)"
+                                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer border border-gray-300 rounded-lg" />
+
+                            <p class="mt-1 text-xs text-gray-500">Format: JPG/PNG. Max 2MB.</p>
+
+                            <x-input-error class="mt-2" :messages="$errors->get('ktm')" />
+                            <div x-show="errorMessage" x-cloak
+                                class="mt-2 p-2 bg-red-50 border border-red-200 rounded text-xs text-red-600 flex items-center">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                <span x-text="errorMessage"></span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
         @endrole
 
         @role('pimpinan')
-        {{-- Pimpinan Data Section --}}
+        {{-- Pimpinan Data (Tetap sama) --}}
         <div class="pt-6 border-t border-gray-200">
-            <div class="flex items-center mb-6">
-                <div
-                    class="w-10 h-10 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg flex items-center justify-center mr-3">
-                    <i class="fas fa-user-tie text-purple-600"></i>
-                </div>
-                <div>
-                    <h4 class="text-md font-semibold text-gray-800">Data Pimpinan</h4>
-                    <p class="text-sm text-gray-600">Lengkapi data kepemimpinan Anda</p>
-                </div>
-            </div>
-
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                    <label for="nid" class="block text-sm font-semibold text-gray-700 mb-2">
-                        <i class="fas fa-id-badge text-gray-400 mr-2"></i>
-                        NID (Nomor Induk Dosen/Kepegawaian)
-                    </label>
-                    <input wire:model="nid" id="nid" name="nid" type="text"
-                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
-                        placeholder="Contoh: 1234567890" required />
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">NID</label>
+                    <input wire:model="nid" type="text"
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 transition-all"
+                        required />
                     <x-input-error class="mt-2" :messages="$errors->get('nid')" />
                 </div>
-
                 <div>
-                    <label for="position_id" class="block text-sm font-semibold text-gray-700 mb-2">
-                        <i class="fas fa-briefcase text-gray-400 mr-2"></i>
-                        Jabatan
-                    </label>
-                    <select wire:model="position_id" id="position_id" name="position_id"
-                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all text-gray-800"
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Jabatan</label>
+                    <select wire:model="position_id"
+                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 transition-all"
                         required>
                         <option value="">-- Pilih Jabatan --</option>
-                        @foreach($positions as $position)
-                        <option value="{{ $position->position_id }}">{{ $position->position_name }}</option>
+                        {{-- UBAH LOOPING UNTUK MENGGUNAKAN COMPUTED PROPERTY --}}
+                        @foreach($this->positions as $pos)
+                        <option value="{{ $pos->position_id }}">{{ $pos->position_name }}</option>
                         @endforeach
                     </select>
                     <x-input-error class="mt-2" :messages="$errors->get('position_id')" />
@@ -277,20 +367,17 @@
         </div>
         @endrole
 
-        {{-- Action Buttons --}}
         <div class="flex items-center gap-4 pt-6">
             <button type="submit"
-                class="inline-flex items-center px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-lg shadow-sm transition-all duration-300">
-                <i class="fas fa-save mr-2"></i>
-                Simpan Perubahan
+                class="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg shadow-sm transition-all"
+                wire:loading.attr="disabled">
+                <i class="fas fa-save mr-2"></i> Simpan Perubahan
             </button>
-
             <div x-data="{ shown: false }"
                 x-on:profile-updated.window="shown = true; setTimeout(() => shown = false, 3000)" x-show="shown"
                 x-transition
                 class="flex items-center px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200">
-                <i class="fas fa-circle-check mr-2"></i>
-                <span class="text-sm font-medium">Tersimpan!</span>
+                <i class="fas fa-circle-check mr-2"></i> <span class="text-sm font-medium">Tersimpan!</span>
             </div>
         </div>
     </form>

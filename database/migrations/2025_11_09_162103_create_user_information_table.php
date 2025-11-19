@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('nim', 11)->primary();
             $table->unsignedBigInteger('user_id');
             $table->unsignedBigInteger('study_id');
+            $table->string('ktm_path', 255)->nullable();
 
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->foreign('study_id')->references('study_id')->on('study_programs')->onDelete('cascade');

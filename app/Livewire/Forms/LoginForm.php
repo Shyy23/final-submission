@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Forms;
 
+use App\Models\User; // TAMBAHKAN: Import User
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
@@ -28,15 +29,41 @@ class LoginForm extends Form
      */
     public function authenticate(): void
     {
+        // UBAH: Logika authenticate() diganti total
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only(['email', 'password']), $this->remember)) {
+        // 1. Cek kredensial (username & password) tanpa login
+        if (! Auth::validate($this->only(['email', 'password']))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
                 'form.email' => trans('auth.failed'),
             ]);
         }
+
+        // 2. Kredensial benar, ambil data user
+        $user = User::where('email', $this->email)->first();
+
+        // 3. Cek apakah user sudah diverifikasi oleh Admin
+        if (! $user->is_verified) {
+            // Kita bisa beri pesan error yang lebih spesifik
+            
+            // Cek apakah email-nya sudah diverifikasi
+            if (! $user->hasVerifiedEmail()) {
+                throw ValidationException::withMessages([
+                    'form.email' => 'Email Anda belum diverifikasi. Silakan cek inbox Anda.',
+                ]);
+            }
+
+            // Jika email sudah, tapi admin belum
+            throw ValidationException::withMessages([
+                'form.email' => 'Akun Anda sedang menunggu persetujuan Admin.',
+            ]);
+        }
+        
+        // 4. Jika user ada, password benar, DAN is_verified = true
+        // Baru kita login-kan
+        Auth::attempt($this->only(['email', 'password']), $this->remember);
 
         RateLimiter::clear($this->throttleKey());
     }
@@ -46,6 +73,7 @@ class LoginForm extends Form
      */
     protected function ensureIsNotRateLimited(): void
     {
+// ... (Sisa file ini tetap sama) ...
         if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
             return;
         }

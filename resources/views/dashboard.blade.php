@@ -25,7 +25,9 @@
     </x-slot>
 
     <div class="py-8">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
+        <div class=" mx-auto sm:px-6 lg:px-8">
+
+            {{-- Alert Profil Belum Lengkap (Tetap di sini atau pindah ke komponen, bebas) --}}
             @if (!auth()->user()->is_profile_complete)
             <div class="mb-6 bg-amber-50 border-l-4 border-amber-500 p-4 shadow-sm rounded-r-lg">
                 <div class="flex items-start">
@@ -55,12 +57,19 @@
                 </div>
             </div>
             @endif
+
+            {{-- LOAD COMPONENT BERDASARKAN ROLE --}}
+            {{-- Tambahkan attribute 'lazy' agar loading terasa lebih cepat --}}
+
             @role('mahasiswa')
-            @include('dashboard.partials.student-dashboard')
+            <livewire:dashboard.student-dashboard lazy />
+
             @elserole('admin')
-            @include('dashboard.partials.admin-dashboard')
+            <livewire:dashboard.admin-dashboard lazy />
+
             @elserole('pimpinan')
-            @include('dashboard.partials.pimpinan-dashboard')
+            <livewire:dashboard.pimpinan-dashboard lazy />
+
             @else
             <div class="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
                 <h3 class="text-2xl font-bold text-gray-800 mb-3">Akses Ditolak</h3>
@@ -69,15 +78,10 @@
                 </p>
             </div>
             @endrole
+
         </div>
     </div>
 
     {{-- Footer --}}
-    <footer class="bg-white border-t border-gray-100 mt-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <p class="text-center text-sm text-gray-500">
-                © {{ date('Y') }} Submission System. All rights reserved.
-            </p>
-        </div>
-    </footer>
+    <x-footer />
 </x-app-layout>

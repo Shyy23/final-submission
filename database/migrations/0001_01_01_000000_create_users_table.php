@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->timestamp('email_verified_at')->nullable();
             $table->string('password');
+            $table->boolean('is_verified')->default(false)->comment('Set to true by admin to allow login');
             $table->rememberToken();
             $table->timestamps();
         });

@@ -1,101 +1,214 @@
 <?php
 
 use App\Models\User;
+use App\Models\Student; // GANTI Mahasiswa -> Student (sesuai migrasi Anda)
+use App\Models\StudyProgram; // IMPORT StudyProgram (sesuai migrasi Anda)
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Livewire\Attributes\Layout;
 use Livewire\Volt\Component;
+use Livewire\WithFileUploads; // TAMBAHKAN: Untuk upload file
+use Illuminate\Support\Facades\DB; // TAMBAHKAN: Untuk transaction
+use Illuminate\Database\Eloquent\Collection; // TAMBAHKAN: Untuk type-hint
 
 new #[Layout('layouts.guest')] class extends Component
 {
+    use WithFileUploads; // TAMBAHKAN: Gunakan trait
+
     public string $name = '';
     public string $email = '';
     public string $password = '';
     public string $password_confirmation = '';
+    public string $nim = '';
+    public ?int $study_id = null; 
+    public $ktm; 
+    public Collection $prodiOptions; 
+
+    public function mount(): void
+    {
+        // Mengisi dropdown dari tabel study_programs
+        $this->prodiOptions = StudyProgram::orderBy('study_name')->get();
+    }
 
     /**
      * Handle an incoming registration request.
      */
     public function register(): void
     {
+        // UBAH: Validasi
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
+            'email' => [
+                'required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class,
+                'regex:/^[a-zA-Z0-9._%+-]+@unjani\.ac\.id$/i' // Validasi email unjani
+            ],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
+            
+            // TAMBAHKAN: Validasi baru
+            'nim' => ['required', 'string', 'max:11', 'unique:' . Student::class], // Cek ke tabel students
+            'study_id' => ['required', 'integer', 'exists:study_programs,study_id'], // Cek ke tabel study_programs
+            'ktm' => ['required', 'image', 'max:2048'], // Validasi file KTM (maks 2MB)
+        ], [
+            // TAMBAHKAN: Pesan error kustom
+            'email.regex' => 'Pendaftaran hanya diizinkan untuk email mahasiswa (@unjani.ac.id).',
+            'nim.unique' => 'NIM ini sudah terdaftar.',
+            'study_id.required' => 'Program Studi wajib dipilih.',
+            'ktm.required' => 'Harap upload scan KTM Anda.',
         ]);
 
-        $validated['password'] = Hash::make($validated['password']);
+        DB::transaction(function () use ($validated) {
+            // 1. Simpan file KTM
+            $ktmPath = $this->ktm->store('ktm', 'public');
 
-        event(new Registered($user = User::create($validated)));
+            // 2. Buat User (is_verified default-nya false dari migrasi)
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+            ]);
 
-        Auth::login($user);
+            // 3. Buat Student (menggunakan relasi dari model User)
+            $user->student()->create([
+                'nim' => $validated['nim'],
+                'study_id' => $validated['study_id'],
+                'ktm_path' => $ktmPath,
+            ]);
 
-        $this->redirect(route('dashboard', absolute: false), navigate: true);
+            event(new Registered($user));
+        });
+        session()->flash('status', 'Pendaftaran berhasil! Silakan verifikasi email Anda. Akun Anda akan aktif setelah diverifikasi oleh Admin.');
+        $this->redirect(route('login'), navigate: true);
     }
 }; ?>
 
-<div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
-    <div class="max-w-md w-full space-y-8">
+<div
+    class="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
 
-        <!-- Logo & Header Section -->
-        <div class="text-center">
-            <div class="flex justify-center">
-                <a href="/" wire:navigate class=" mb-4">
-                    <img src="{{ asset('assets/img/unjani.png') }}" alt="logo unjani" class="w-16 h-16">
+    <!-- Card Wrapper Utama -->
+    <div class="w-full max-w-sm lg:max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden lg:grid lg:grid-cols-2">
+
+        <!-- [KOLOM 1: BRANDING/INFO - HANYA DESKTOP] -->
+        <div class="hidden lg:flex flex-col justify-center p-12 bg-gray-50 border-r border-gray-100">
+            <div class="flex justify-center mb-6">
+                <a href="/" wire:navigate>
+                    <img src="{{ asset('assets/img/unjani.png') }}" alt="logo unjani" class="w-24 h-24">
                 </a>
             </div>
-            <h2 class="text-3xl font-bold text-gray-800 mb-2">
-                Daftar Akun Baru
+            <h2 class="text-2xl font-bold text-center text-gray-800 mb-3">
+                Selamat Datang
             </h2>
-            <p class="text-sm text-gray-600">
-                Buat akun untuk mengakses Submission System
+            <p class="text-center text-gray-600 text-sm mb-6">
+                Satu langkah lagi untuk mengelola pengajuan tugas akhir Anda.
             </p>
+            <!-- Info tambahan untuk memandu user -->
+            <ul class="space-y-3 text-gray-600 text-sm">
+                <li class="flex items-start">
+                    <i class="fas fa-check-circle text-emerald-500 mt-1 mr-3 flex-shrink-0"></i>
+                    <span>Pastikan data (NIM, Nama, Prodi) sesuai dengan KTM.</span>
+                </li>
+                <li class="flex items-start">
+                    <i class="fas fa-check-circle text-emerald-500 mt-1 mr-3 flex-shrink-0"></i>
+                    <span>Gunakan email <code class="text-xs bg-gray-200 p-0.5 rounded">@unjani.ac.id</code> yang
+                        aktif.</span>
+                </li>
+                <li class="flex items-start">
+                    <i class="fas fa-check-circle text-emerald-500 mt-1 mr-3 flex-shrink-0"></i>
+                    <span>Akun akan diverifikasi oleh Admin sebelum dapat digunakan.</span>
+                </li>
+            </ul>
         </div>
 
-        <!-- Register Card -->
-        <div class="bg-white rounded-2xl shadow-sm p-8 border border-gray-100">
+        <!-- [KOLOM 2: FORMULIR - MOBILE & DESKTOP] -->
+        <div class="p-8 sm:p-12">
 
-            <form wire:submit="register" class="space-y-5">
+            <!-- Logo & Header (HANYA MOBILE) -->
+            <div class="text-center lg:hidden">
+                <a href="/" wire:navigate class="inline-block mb-4">
+                    <img src="{{ asset('assets/img/unjani.png') }}" alt="logo unjani" class="w-16 h-16 mx-auto">
+                </a>
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">
+                    Daftar Akun Mahasiswa
+                </h2>
+                <p class="text-sm text-gray-600">
+                    Buat akun untuk mengakses Submission System
+                </p>
+            </div>
+
+            <!-- Header (HANYA DESKTOP) -->
+            <div class="hidden lg:block mb-6">
+                <h2 class="text-3xl font-bold text-gray-800 mb-2">
+                    Daftar Akun
+                </h2>
+                <p class="text-sm text-gray-600">
+                    Buat akun untuk mengakses Submission System
+                </p>
+            </div>
+
+            <!-- Formulir Registrasi -->
+            <form wire:submit="register" class="space-y-5 mt-6 lg:mt-0">
 
                 <!-- Name -->
                 <div>
-                    <x-input-label for="name" :value="__('Nama Lengkap')" class="text-gray-700 font-semibold mb-2" />
+                    <x-input-label for="name" :value="__('Nama Lengkap (sesuai KTM)')"
+                        class="text-gray-700 font-semibold mb-2" />
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fas fa-user text-gray-400"></i>
                         </div>
-                        <x-text-input
-                            wire:model="name"
-                            id="name"
+                        <x-text-input wire:model="name" id="name"
                             class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                            type="text"
-                            name="name"
-                            placeholder="Masukkan nama lengkap"
-                            required
-                            autofocus
-                            autocomplete="name" />
+                            type="text" placeholder="Masukkan nama lengkap" required autofocus autocomplete="name" />
                     </div>
                     <x-input-error :messages="$errors->get('name')" class="mt-2" />
                 </div>
 
+                <!-- NIM -->
+                <div>
+                    <x-input-label for="nim" :value="__('NIM (Nomor Induk Mahasiswa)')"
+                        class="text-gray-700 font-semibold mb-2" />
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-id-badge text-gray-400"></i>
+                        </div>
+                        <x-text-input wire:model="nim" id="nim"
+                            class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
+                            type="text" placeholder="Masukkan NIM" required autocomplete="off" />
+                    </div>
+                    <x-input-error :messages="$errors->get('nim')" class="mt-2" />
+                </div>
+
+                <!-- Prodi (Dropdown) -->
+                <div>
+                    <x-input-label for="study_id" :value="__('Program Studi')"
+                        class="text-gray-700 font-semibold mb-2" />
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-graduation-cap text-gray-400"></i>
+                        </div>
+                        <select wire:model="study_id" id="study_id" name="study_id"
+                            class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 bg-white"
+                            required>
+                            <option value="" disabled>Pilih program studi...</option>
+                            @foreach($prodiOptions as $prodi)
+                            <option value="{{ $prodi->study_id }}">{{ $prodi->study_name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <x-input-error :messages="$errors->get('study_id')" class="mt-2" />
+                </div>
+
                 <!-- Email Address -->
                 <div>
-                    <x-input-label for="email" :value="__('Email')" class="text-gray-700 font-semibold mb-2" />
+                    <x-input-label for="email" :value="__('Email Unjani')" class="text-gray-700 font-semibold mb-2" />
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fas fa-envelope text-gray-400"></i>
                         </div>
-                        <x-text-input
-                            wire:model="email"
-                            id="email"
+                        <x-text-input wire:model="email" id="email"
                             class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                            type="email"
-                            name="email"
-                            placeholder="nama@email.com"
-                            required
-                            autocomplete="username" />
+                            type="email" placeholder="nama@unjani.ac.id" required autocomplete="username" />
                     </div>
                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
                 </div>
@@ -107,46 +220,64 @@ new #[Layout('layouts.guest')] class extends Component
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fas fa-lock text-gray-400"></i>
                         </div>
-                        <x-text-input
-                            wire:model="password"
-                            id="password"
+                        <x-text-input wire:model="password" id="password"
                             class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                            type="password"
-                            name="password"
-                            placeholder="Minimal 8 karakter"
-                            required
-                            autocomplete="new-password" />
+                            type="password" placeholder="Minimal 8 karakter" required autocomplete="new-password" />
                     </div>
                     <x-input-error :messages="$errors->get('password')" class="mt-2" />
                 </div>
 
                 <!-- Confirm Password -->
                 <div>
-                    <x-input-label for="password_confirmation" :value="__('Konfirmasi Password')" class="text-gray-700 font-semibold mb-2" />
+                    <x-input-label for="password_confirmation" :value="__('Konfirmasi Password')"
+                        class="text-gray-700 font-semibold mb-2" />
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fas fa-lock text-gray-400"></i>
                         </div>
-                        <x-text-input
-                            wire:model="password_confirmation"
-                            id="password_confirmation"
+                        <x-text-input wire:model="password_confirmation" id="password_confirmation"
                             class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                            type="password"
-                            name="password_confirmation"
-                            placeholder="Ulangi password"
-                            required
-                            autocomplete="new-password" />
+                            type="password" placeholder="Ulangi password" required autocomplete="new-password" />
                     </div>
                     <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
                 </div>
 
+                <!-- KTM File Upload -->
+                <div>
+                    <x-input-label for="ktm" :value="__('Upload Scan KTM')" class="text-gray-700 font-semibold mb-2" />
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-id-card text-gray-400"></i>
+                        </div>
+                        <input wire:model="ktm" id="ktm"
+                            class="block w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 cursor-pointer bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:cursor-pointer file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                            type="file" required />
+                    </div>
+                    <div wire:loading wire:target="ktm" class="mt-2 text-sm text-emerald-600">
+                        <i class="fas fa-spinner fa-spin mr-1"></i>
+                        Sedang mengupload...
+                    </div>
+                    @if ($ktm && !$errors->has('ktm'))
+                    <div class="mt-3">
+                        <span class="text-sm text-gray-600 block mb-2">Preview KTM:</span>
+                        <img src="{{ $ktm->temporaryUrl() }}" class="w-full rounded-lg border border-gray-200">
+                    </div>
+                    @endif
+                    <x-input-error :messages="$errors->get('ktm')" class="mt-2" />
+                </div>
+
                 <!-- Register Button -->
                 <div class="pt-2">
-                    <button
-                        type="submit"
+                    <button type="submit"
                         class="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-lg shadow-md transition-all duration-300 transform hover:scale-[1.02]">
-                        <i class="fas fa-user-plus mr-2"></i>
-                        Daftar Sekarang
+                        <span wire:loading.remove wire:target="register">
+                            <i class="fas fa-user-plus mr-2"></i>
+                            Daftar Sekarang
+                        </span>
+                        <span wire:loading wire:target="register">
+                            <i class="fas fa-spinner fa-spin mr-2"></i>
+                            Memproses...
+                        </span>
                     </button>
                 </div>
 
@@ -154,8 +285,7 @@ new #[Layout('layouts.guest')] class extends Component
                 <div class="text-center pt-4 border-t border-gray-100">
                     <p class="text-sm text-gray-600">
                         Sudah punya akun?
-                        <a
-                            href="{{ route('login') }}"
+                        <a href="{{ route('login') }}"
                             class="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors duration-200"
                             wire:navigate>
                             Login di sini
@@ -165,11 +295,5 @@ new #[Layout('layouts.guest')] class extends Component
 
             </form>
         </div>
-
-        <!-- Footer Text -->
-        <p class="text-center text-xs text-gray-500">
-            © {{ date('Y') }} Submission System - Tugas Akhir Mahasiswa
-        </p>
-
-    </div>
+    </div> <!-- Akhir dari Card Wrapper Utama -->
 </div>

@@ -1,4 +1,4 @@
-Send an email verification notification to the user.Log the current user out of the application.Send an email verification notification to the user.Log the current user out of the application.<?php
+<?php
 
                                                                                                                                                                                                 use App\Livewire\Actions\Logout;
                                                                                                                                                                                                 use Illuminate\Support\Facades\Auth;
@@ -40,7 +40,8 @@ Send an email verification notification to the user.Log the current user out of 
         <!-- Logo & Header Section -->
         <div class="text-center">
             <div class="flex justify-center">
-                <a href="/" wire:navigate class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg mb-4 hover:shadow-xl transition-shadow duration-300">
+                <a href="/" wire:navigate
+                    class="w-16 h-16 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-lg mb-4 hover:shadow-xl transition-shadow duration-300">
                     <span class="text-white font-bold text-2xl">UNJ</span>
                 </a>
             </div>
@@ -63,7 +64,9 @@ Send an email verification notification to the user.Log the current user out of 
                     </div>
                     <div class="flex-1">
                         <p class="text-sm text-gray-700 leading-relaxed">
-                            Terima kasih telah mendaftar! Sebelum memulai, silakan verifikasi alamat email Anda dengan mengklik link yang baru saja kami kirimkan. Jika Anda tidak menerima email tersebut, kami dengan senang hati akan mengirimkan yang lain.
+                            Terima kasih telah mendaftar! Sebelum memulai, silakan verifikasi alamat email Anda dengan
+                            mengklik link yang baru saja kami kirimkan. Jika Anda tidak menerima email tersebut, kami
+                            dengan senang hati akan mengirimkan yang lain.
                         </p>
                     </div>
                 </div>
@@ -88,18 +91,14 @@ Send an email verification notification to the user.Log the current user out of 
             <!-- Actions -->
             <div class="space-y-4">
                 <!-- Resend Button -->
-                <button
-                    wire:click="sendVerification"
-                    type="button"
+                <button wire:click="sendVerification" type="button"
                     class="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-lg shadow-md transition-all duration-300 transform hover:scale-[1.02]">
                     <i class="fas fa-paper-plane mr-2"></i>
                     Kirim Ulang Email Verifikasi
                 </button>
 
                 <!-- Logout Button -->
-                <button
-                    wire:click="logout"
-                    type="button"
+                <button wire:click="logout" type="button"
                     class="w-full inline-flex items-center justify-center px-6 py-3 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-lg border border-gray-300 transition-all duration-200">
                     <i class="fas fa-sign-out-alt mr-2"></i>
                     Keluar

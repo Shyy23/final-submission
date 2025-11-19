@@ -14,6 +14,10 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
+    <!-- Alpine.js for mobile menu toggle -->
+    <!-- Saya tambahkan ini untuk fungsionalitas menu mobile -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.14.1/cdn.min.js" defer></script>
+
     <!-- Styles -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
@@ -22,8 +26,11 @@
     <div class="min-h-screen flex flex-col">
 
         <!-- Header/Navigation -->
-        <header class="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+        <!-- Menambahkan x-data untuk state menu mobile -->
+        <header x-data="{ open: false }"
+            class="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50 shadow-sm">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <!-- Mengganti justify-center ke justify-between agar hamburger bisa diletakkan di kanan -->
                 <div class="flex justify-between items-center h-16">
                     <!-- Logo -->
                     <div class="flex items-center space-x-3">
@@ -34,9 +41,10 @@
                         </div>
                     </div>
 
-                    <!-- Auth Links -->
+                    <!-- Auth Links (Desktop) -->
                     @if (Route::has('login'))
-                    <div class="flex items-center space-x-3">
+                    <!-- Tetap 'hidden' di mobile dan 'flex' di sm+ -->
+                    <div class="hidden sm:flex items-center space-x-3">
                         @auth
                         <a href="{{ url('/dashboard') }}"
                             class="inline-flex items-center px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-lg shadow-md transition-all duration-300">
@@ -59,6 +67,43 @@
                         @endauth
                     </div>
                     @endif
+
+                    <div class="sm:hidden flex items-center">
+                        <button @click="open = !open" type="button"
+                            class="inline-flex items-center justify-center p-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-emerald-500"
+                            aria-controls="mobile-menu" aria-expanded="false">
+                            <span class="sr-only">Open main menu</span>
+                            <i x-show="!open" class="fas fa-bars text-xl" aria-hidden="true"></i>
+                            <i x-show="open" class="fas fa-times text-xl" aria-hidden="true" style="display: none;"></i>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+            <div x-show="open" @click.away="open = false" class="sm:hidden" id="mobile-menu" style="display: none;">
+                <div class="px-2 pt-2 pb-3 space-y-1">
+                    @if (Route::has('login'))
+                    @auth
+                    <a href="{{ url('/dashboard') }}"
+                        class="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-600">
+                        <i class="fas fa-home mr-3 w-5 text-center"></i>
+                        Dashboard
+                    </a>
+                    @else
+                    <a href="{{ route('login') }}"
+                        class="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-600">
+                        <i class="fas fa-sign-in-alt mr-3 w-5 text-center"></i>
+                        Login
+                    </a>
+                    @if (Route::has('register'))
+                    <a href="{{ route('register') }}"
+                        class="flex items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-emerald-50 hover:text-emerald-600">
+                        <i class="fas fa-user-plus mr-3 w-5 text-center"></i>
+                        Register
+                    </a>
+                    @endif
+                    @endauth
+                    @endif
                 </div>
             </div>
         </header>
@@ -68,22 +113,27 @@
             <div class="max-w-6xl w-full">
 
                 <!-- Hero Section -->
-                <div class="text-center mb-16">
-                    <div
-                        class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-2xl shadow-lg mb-6">
-                        <i class="fas fa-graduation-cap text-4xl text-white"></i>
+                <!-- Mengurangi margin bottom di mobile (mb-12) dan menambahkannya di sm+ (sm:mb-16) -->
+                <div class="text-center mb-12 sm:mb-16">
+                    <div class="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br
+                        from-emerald-400 to-teal-500 rounded-2xl shadow-lg mb-5 sm:mb-6">
+                        <!-- Mengecilkan font ikon di mobile (text-3xl) -->
+                        <i class="fas fa-graduation-cap text-3xl sm:text-4xl text-white"></i>
                     </div>
-                    <h1 class="text-4xl md:text-5xl font-bold text-gray-800 mb-4">
+                    <!-- Mengecilkan font judul di mobile (text-3xl) -->
+                    <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold text-gray-800 mb-4">
                         Sistem Pengajuan
                         <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500">Tugas
                             Akhir</span>
                     </h1>
-                    <p class="text-lg text-gray-600 max-w-2xl mx-auto">
+                    <!-- Mengecilkan font paragraf di mobile (text-base) -->
+                    <p class="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
                         Platform modern untuk mengelola pengajuan surat tugas akhir mahasiswa dengan mudah dan efisien
                     </p>
                 </div>
 
                 <!-- Features Grid -->
+                <!-- Ini sudah responsif (grid-cols-1 by default) jadi tidak perlu diubah -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
                     <!-- Feature 1 -->
                     <div
@@ -127,22 +177,24 @@
 
                 <!-- CTA Section -->
                 @guest
+                <!-- Mengurangi padding di mobile (p-6) dan membesarkannya di sm+ (sm:p-8) -->
                 <div
-                    class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl shadow-sm p-8 border border-emerald-100 text-center">
+                    class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl shadow-sm p-6 sm:p-8 border border-emerald-100 text-center">
                     <h2 class="text-2xl font-bold text-gray-800 mb-3">
                         Siap Memulai?
                     </h2>
                     <p class="text-gray-600 mb-6 max-w-xl mx-auto">
                         Daftar sekarang dan kelola pengajuan tugas akhir Anda dengan lebih efisien
                     </p>
+                    <!-- Ini sudah responsif (flex-col sm:flex-row) jadi tidak perlu diubah -->
                     <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
                         <a href="{{ route('register') }}"
-                            class="inline-flex items-center px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-lg shadow-md transition-all duration-300 transform hover:scale-105">
+                            class="inline-flex items-center justify-center w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-lg shadow-md transition-all duration-300 transform hover:scale-105">
                             <i class="fas fa-user-plus mr-2"></i>
                             Daftar Sekarang
                         </a>
                         <a href="{{ route('login') }}"
-                            class="inline-flex items-center px-8 py-3 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-lg shadow-sm border border-gray-200 transition-all duration-300">
+                            class="inline-flex items-center justify-center w-full sm:w-auto px-8 py-3 bg-white hover:bg-gray-50 text-gray-700 font-semibold rounded-lg shadow-sm border border-gray-200 transition-all duration-300">
                             <i class="fas fa-sign-in-alt mr-2"></i>
                             Sudah Punya Akun? Login
                         </a>
@@ -151,8 +203,9 @@
                 @endguest
 
                 @auth
+                <!-- Mengurangi padding di mobile (p-6) -->
                 <div
-                    class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl shadow-sm p-8 border border-emerald-100 text-center">
+                    class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl shadow-sm p-6 sm:p-8 border border-emerald-100 text-center">
                     <div class="inline-flex items-center justify-center w-16 h-16 bg-white rounded-full shadow-md mb-4">
                         <i class="fas fa-circle-check text-3xl text-emerald-500"></i>
                     </div>
@@ -174,6 +227,7 @@
         </main>
 
         <!-- Footer -->
+        <!-- Ini sudah responsif (flex-col md:flex-row) jadi tidak perlu diubah -->
         <footer class="bg-white/80 backdrop-blur-sm border-t border-gray-200 mt-auto">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <div class="flex flex-col md:flex-row items-center justify-center">

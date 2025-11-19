@@ -5,25 +5,25 @@ namespace App\Livewire\Admin;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\User;
-use App\Models\Student;
-use App\Models\Leader;
 use Illuminate\Support\Facades\Auth;
-use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Livewire\Attributes\On;
+use Livewire\Attributes\Layout;
 
+#[Layout('layouts.app')]
 class UserManagement extends Component
 {
     use WithPagination;
 
     public $search = '';
     public $roleFilter = '';
+    public $verificationFilter = ''; // Filter baru: '' (Semua), '1' (Verified), '0' (Unverified)
     public $perPage = 10;
 
-    // Form properties
+    // Form Properties (Create/Edit)
     public $showForm = false;
-    public $formType = 'create'; // 'create' or 'edit'
+    public $formType = 'create';
     public $userId = null;
     public $name = '';
     public $email = '';
@@ -31,46 +31,37 @@ class UserManagement extends Component
     public $password = '';
     public $password_confirmation = '';
 
+    // Detail Modal Properties
+    public $showDetail = false;
+    public $selectedUser = null;
+
     protected $queryString = [
         'search' => ['except' => ''],
         'roleFilter' => ['except' => ''],
+        'verificationFilter' => ['except' => ''],
     ];
 
-    public function mount()
-    {
-        // Inisialisasi jika diperlukan
-    }
+    // --- Lifecycle & Updates ---
 
-    public function updatingSearch()
-    {
-        $this->resetPage();
-    }
-
-    public function updatingRoleFilter()
-    {
-        $this->resetPage();
-    }
+    public function updatingSearch() { $this->resetPage(); }
+    public function updatingRoleFilter() { $this->resetPage(); }
+    public function updatingVerificationFilter() { $this->resetPage(); }
 
     public function resetFilters()
     {
         $this->search = '';
         $this->roleFilter = '';
+        $this->verificationFilter = '';
         $this->resetPage();
     }
 
     public function resetForm()
     {
-        $this->reset([
-            'showForm',
-            'formType',
-            'userId',
-            'name',
-            'email',
-            'role',
-            'password',
-            'password_confirmation'
-        ]);
+        $this->reset(['showForm', 'formType', 'userId', 'name', 'email', 'role', 'password', 'password_confirmation']);
+        $this->resetErrorBag();
     }
+
+    // --- Form Handling (Create/Edit) ---
 
     public function showCreateForm()
     {
@@ -82,14 +73,12 @@ class UserManagement extends Component
     public function showEditForm($userId)
     {
         $user = User::findOrFail($userId);
-
         $this->resetForm();
         $this->formType = 'edit';
         $this->userId = $user->id;
         $this->name = $user->name;
         $this->email = $user->email;
         $this->role = $user->getRoleNames()->first() ?? '';
-
         $this->showForm = true;
     }
 
@@ -97,7 +86,14 @@ class UserManagement extends Component
     {
         $rules = [
             'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $this->userId,
+            'email' => [
+                'required',
+                'string',
+                'email',
+                'max:255',
+                'unique:users,email,' . $this->userId,
+                'regex:/^[a-zA-Z0-9._%+-]+@unjani\.ac\.id$/i' // Validasi khusus domain unjani.ac.id
+            ],
             'role' => 'required|in:mahasiswa,admin,pimpinan',
         ];
 
@@ -116,16 +112,16 @@ class UserManagement extends Component
 
         try {
             if ($this->formType === 'create') {
+                // FIX 1: User yang dibuat Admin otomatis is_verified = true
                 $user = User::create([
                     'name' => $this->name,
                     'email' => $this->email,
                     'password' => Hash::make($this->password),
+                    'is_verified' => true, // <--- Auto verified
                 ]);
 
-                // Assign role
                 $user->assignRole($this->role);
-
-                session()->flash('message', 'User berhasil ditambahkan. User dapat melengkapi NIM/NID saat login pertama kali.');
+                session()->flash('message', 'User berhasil ditambahkan & terverifikasi otomatis.');
             } else {
                 $user = User::findOrFail($this->userId);
                 $user->update([
@@ -133,52 +129,85 @@ class UserManagement extends Component
                     'email' => $this->email,
                 ]);
 
-                // Update password jika diisi
                 if ($this->password) {
-                    $user->update([
-                        'password' => Hash::make($this->password),
-                    ]);
+                    $user->update(['password' => Hash::make($this->password)]);
                 }
 
-                // Sync role
                 $user->syncRoles([$this->role]);
-
                 session()->flash('message', 'User berhasil diperbarui.');
             }
 
+            $this->showForm = false; // Tutup modal form
             $this->resetForm();
         } catch (\Exception $e) {
             session()->flash('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
     }
 
+    // --- Detail & Verification Logic (NEW) ---
+
+    public function showUserDetail($userId)
+    {
+        // Load user beserta relasi student dan leader untuk ditampilkan di modal detail
+        $this->selectedUser = User::with(['student', 'leader', 'roles'])->findOrFail($userId);
+        $this->showDetail = true;
+    }
+
+    public function closeDetail()
+    {
+        $this->showDetail = false;
+        $this->selectedUser = null;
+    }
+
+    public function verifyUser($userId)
+    {
+        try {
+            $user = User::findOrFail($userId);
+            $user->update(['is_verified' => true]);
+            
+            // Refresh data selectedUser agar tampilan modal terupdate
+            $this->selectedUser = $user->refresh(); 
+            
+            session()->flash('message', 'Akun Pengguna berhasil diverifikasi.');
+            
+            // Opsional: Tutup modal setelah verifikasi
+            // $this->closeDetail(); 
+        } catch (\Exception $e) {
+            session()->flash('error', 'Gagal memverifikasi user.');
+        }
+    }
+
+    // --- Delete Logic ---
+
     public function confirmDelete($userId)
     {
         $this->dispatch('show-confirm-dialog', 
-            message: 'Apakah Anda yakin ingin menghapus user ini?', 
+            message: 'Apakah Anda yakin ingin menghapus user ini? Data terkait (mahasiswa/pimpinan) juga akan terhapus.', 
             method: 'do-delete-user', 
-            params: ['userId' => $userId] // <-- *** UBAH MENJADI SEPERTI INI ***
+            params: ['userId' => $userId]
         );
     }
 
-    #[On('do-delete-user')] // <-- 3. TAMBAHKAN LISTENER INI
+    #[On('do-delete-user')]
     public function deleteUser($userId)
     {
         try {
             $user = User::findOrFail($userId);
 
-            // Prevent deleting own account
             if ($user->id === Auth::id()) {
                 session()->flash('error', 'Tidak dapat menghapus akun sendiri.');
                 return;
             }
 
             $user->delete();
+            $this->showDetail = false; // Tutup detail modal jika sedang terbuka
             session()->flash('message', 'User berhasil dihapus.');
         } catch (\Exception $e) {
             session()->flash('error', 'Terjadi kesalahan: '.$e->getMessage());
         }
     }
+
+    // --- Query Logic ---
 
     public function getUsersQuery()
     {
@@ -189,7 +218,12 @@ class UserManagement extends Component
                 }
             });
 
-        // Apply search filter
+        // FIX 2: Filter Verify Status
+        if ($this->verificationFilter !== '') {
+            $status = $this->verificationFilter === '1';
+            $query->where('is_verified', $status);
+        }
+
         if ($this->search) {
             $query->where(function ($q) {
                 $q->where('name', 'like', '%' . $this->search . '%')
@@ -203,7 +237,8 @@ class UserManagement extends Component
             });
         }
 
-        return $query->orderBy('name', 'asc');
+        // Urutkan yang belum verified di atas agar Admin notice
+        return $query->orderBy('is_verified', 'asc')->orderBy('created_at', 'desc');
     }
 
     public function getUsersProperty()
@@ -221,6 +256,6 @@ class UserManagement extends Component
         return view('livewire.admin.user-management', [
             'users' => $this->users,
             'totalUsers' => $this->totalUsers,
-        ])->layout('layouts.app');
+        ]);
     }
 }

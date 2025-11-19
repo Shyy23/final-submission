@@ -99,15 +99,9 @@ new #[Layout('layouts.guest')] class extends Component
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fas fa-envelope text-gray-400"></i>
                         </div>
-                        <x-text-input
-                            wire:model="email"
-                            id="email"
+                        <x-text-input wire:model="email" id="email"
                             class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                            type="email"
-                            name="email"
-                            placeholder="nama@email.com"
-                            required
-                            autofocus
+                            type="email" name="email" placeholder="nama@unjani.ac.id" required autofocus
                             autocomplete="username" />
                     </div>
                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
@@ -115,19 +109,15 @@ new #[Layout('layouts.guest')] class extends Component
 
                 <!-- Password -->
                 <div>
-                    <x-input-label for="password" :value="__('Password Baru')" class="text-gray-700 font-semibold mb-2" />
+                    <x-input-label for="password" :value="__('Password Baru')"
+                        class="text-gray-700 font-semibold mb-2" />
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fas fa-lock text-gray-400"></i>
                         </div>
-                        <x-text-input
-                            wire:model="password"
-                            id="password"
+                        <x-text-input wire:model="password" id="password"
                             class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                            type="password"
-                            name="password"
-                            placeholder="Minimal 8 karakter"
-                            required
+                            type="password" name="password" placeholder="Minimal 8 karakter" required
                             autocomplete="new-password" />
                     </div>
                     <x-input-error :messages="$errors->get('password')" class="mt-2" />
@@ -135,19 +125,15 @@ new #[Layout('layouts.guest')] class extends Component
 
                 <!-- Confirm Password -->
                 <div>
-                    <x-input-label for="password_confirmation" :value="__('Konfirmasi Password Baru')" class="text-gray-700 font-semibold mb-2" />
+                    <x-input-label for="password_confirmation" :value="__('Konfirmasi Password Baru')"
+                        class="text-gray-700 font-semibold mb-2" />
                     <div class="relative">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fas fa-lock text-gray-400"></i>
                         </div>
-                        <x-text-input
-                            wire:model="password_confirmation"
-                            id="password_confirmation"
+                        <x-text-input wire:model="password_confirmation" id="password_confirmation"
                             class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                            type="password"
-                            name="password_confirmation"
-                            placeholder="Ulangi password baru"
-                            required
+                            type="password" name="password_confirmation" placeholder="Ulangi password baru" required
                             autocomplete="new-password" />
                     </div>
                     <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
@@ -155,8 +141,7 @@ new #[Layout('layouts.guest')] class extends Component
 
                 <!-- Reset Button -->
                 <div class="pt-2">
-                    <button
-                        type="submit"
+                    <button type="submit"
                         class="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-lg shadow-md transition-all duration-300 transform hover:scale-[1.02]">
                         <i class="fas fa-key mr-2"></i>
                         Reset Password
@@ -167,8 +152,7 @@ new #[Layout('layouts.guest')] class extends Component
                 <div class="text-center pt-4 border-t border-gray-100">
                     <p class="text-sm text-gray-600">
                         Ingat password Anda?
-                        <a
-                            href="{{ route('login') }}"
+                        <a href="{{ route('login') }}"
                             class="text-emerald-600 hover:text-emerald-700 font-semibold transition-colors duration-200"
                             wire:navigate>
                             Kembali ke Login
