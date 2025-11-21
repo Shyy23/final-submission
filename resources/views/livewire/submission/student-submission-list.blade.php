@@ -118,49 +118,76 @@ new class extends Component {
             <table class="w-full">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">No
+                        <th
+                            class="px-3 md:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            No
                         </th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Perusahaan</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Alamat</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Tanggal Pengajuan</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Status</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Catatan</th>
-                        <th class="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Aksi</th>
+                        <th
+                            class="px-3 md:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Perusahaan
+                        </th>
+                        {{-- HIDE DI MOBILE/TABLET --}}
+                        <th
+                            class="hidden md:table-cell px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Alamat
+                        </th>
+                        <th
+                            class="hidden md:table-cell px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Tanggal Pengajuan
+                        </th>
+                        {{-- END HIDE --}}
+                        <th
+                            class="px-3 md:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Status
+                        </th>
+                        {{-- HIDE DI MOBILE/TABLET --}}
+                        <th
+                            class="hidden md:table-cell px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Catatan
+                        </th>
+                        {{-- END HIDE --}}
+                        <th
+                            class="px-3 md:px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Aksi
+                        </th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-100">
                     @foreach($submissions as $index => $submission)
                     <tr class="hover:bg-gray-50 transition-colors duration-200">
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        {{-- No --}}
+                        <td class="px-3 md:px-6 py-4 whitespace-nowrap">
                             <div class="text-sm font-medium text-gray-800">
                                 {{ ($submissions->currentPage() - 1) * $submissions->perPage() + $index + 1 }}
                             </div>
                         </td>
-                        <td class="px-6 py-4">
+                        {{-- Perusahaan (Kolom Utama) --}}
+                        <td class="px-3 md:px-6 py-4">
                             <div class="flex items-center">
                                 <div
-                                    class="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-lg flex items-center justify-center mr-3">
-                                    <i class="fas fa-building text-emerald-600"></i>
+                                    class="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-lg flex items-center justify-center mr-3">
+                                    <i class="fas fa-building text-emerald-600 text-sm md:text-base"></i>
                                 </div>
                                 <div>
                                     <div class="text-sm font-semibold text-gray-800">{{ $submission->company_name }}
                                     </div>
+                                    {{-- Tampilkan Tanggal di bawah nama Perusahaan (Khusus Mobile) --}}
+                                    <div class="md:hidden text-xs text-gray-500 mt-1">
+                                        <i class="far fa-calendar-alt text-gray-400 mr-1"></i>
+                                        {{ $submission->created_at->format('d M Y') }}
+                                    </div>
                                 </div>
                             </div>
                         </td>
-                        <td class="px-6 py-4">
+                        {{-- Alamat (Hidden Mobile) --}}
+                        <td class="hidden md:table-cell px-6 py-4">
                             <div class="text-sm text-gray-600 max-w-xs">
                                 <i class="fas fa-map-marker-alt text-gray-400 mr-1"></i>
                                 {{ Str::limit($submission->address_company, 50) }}
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        {{-- Tanggal Pengajuan (Hidden Mobile) --}}
+                        <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-800">
                                 <i class="far fa-calendar text-gray-400 mr-1"></i>
                                 {{ $submission->created_at->format('d M Y') }}
@@ -170,7 +197,8 @@ new class extends Component {
                                 {{ $submission->created_at->format('H:i') }} WIB
                             </div>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap">
+                        {{-- Status --}}
+                        <td class="px-3 md:px-6 py-4 whitespace-nowrap">
                             @php
                             $statusConfig = [
                             'pending' => ['bg' => 'bg-amber-100', 'text' => 'text-amber-700', 'label' => 'Menunggu',
@@ -185,12 +213,14 @@ new class extends Component {
                             $config = $statusConfig[$submission->status] ?? $statusConfig['pending'];
                             @endphp
                             <span
-                                class="px-3 py-1.5 inline-flex items-center text-xs leading-5 font-semibold rounded-full {{ $config['bg'] }} {{ $config['text'] }}">
-                                <i class="fas {{ $config['icon'] }} mr-1.5"></i>
-                                {{ $config['label'] }}
+                                class="px-2 py-1 inline-flex items-center text-[10px] sm:text-xs leading-5 font-semibold rounded-full {{ $config['bg'] }} {{ $config['text'] }}">
+                                <i class="fas {{ $config['icon'] }} mr-1 sm:mr-1.5 text-xs font-medium"></i>
+                                {{-- Hilangkan label di layar kecil, tampilkan di sm: ke atas --}}
+                                <span class="hidden sm:inline">{{ $config['label'] }}</span>
                             </span>
                         </td>
-                        <td class="px-6 py-4">
+                        {{-- Catatan (Hidden Mobile) --}}
+                        <td class="hidden md:table-cell px-6 py-4">
                             @if($submission->note)
                             <div class="text-sm text-gray-600 max-w-xs">
                                 <i class="fas fa-sticky-note text-gray-400 mr-1"></i>
@@ -200,13 +230,15 @@ new class extends Component {
                             <span class="text-xs text-gray-400 italic">Tidak ada catatan</span>
                             @endif
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                        {{-- Aksi --}}
+                        <td class="px-3 md:px-6 py-4 whitespace-nowrap text-center">
                             <div class="flex items-center justify-center gap-2">
                                 <a href="{{ route('submissions.show', $submission->submission_id) }}"
                                     class="inline-flex items-center px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium rounded-lg transition-colors duration-200 shadow-sm"
                                     wire:navigate>
-                                    <i class="fas fa-eye mr-1.5"></i>
-                                    Detail
+                                    <i class="fas fa-eye md:mr-1.5"></i>
+                                    {{-- Teks Aksi hanya muncul di md: ke atas --}}
+                                    <span class="hidden md:inline">Detail</span>
                                 </a>
                             </div>
                         </td>
@@ -219,8 +251,8 @@ new class extends Component {
         {{-- Pagination Info --}}
         @if($submissions->hasPages())
         <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
-            <div class="flex items-center justify-between">
-                <div class="text-sm text-gray-600">
+            <div class="flex items-center justify-between text-xs md:text-sm">
+                <div class="text-gray-600">
                     Menampilkan <span class="font-semibold text-gray-800">{{ $submissions->firstItem() }}</span>
                     sampai <span class="font-semibold text-gray-800">{{ $submissions->lastItem() }}</span>
                     dari <span class="font-semibold text-gray-800">{{ $submissions->total() }}</span> pengajuan

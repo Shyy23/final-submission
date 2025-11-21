@@ -6,11 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    {{-- 1. JUDUL DINAMIS: Menggunakan variabel $title jika ada, jika tidak pakai config --}}
+    <title>{{ $title ?? config('app.name', 'Laravel') }}</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
 
@@ -23,35 +25,44 @@
     @livewireStyles
 </head>
 
-<body class="font-sans antialiased">
-    <div class="min-h-screen bg-gray-100 flex flex-row">
+<body class="font-sans antialiased bg-gray-100">
+    {{--
+    2. STRUKTUR RESPONSIF:
+    - Mobile: flex-col (Atas ke Bawah)
+    - Desktop (md): flex-row (Samping menyamping)
+    --}}
+    <div class="min-h-screen flex flex-col md:flex-row" x-data="{ sidebarOpen: false }">
+
+        {{-- Navigasi (Menerima state sidebarOpen) --}}
         <livewire:layout.navigation />
 
-        <div class="flex-1">
-            <main class="p-6">
+        {{-- Konten Utama --}}
+        <div class="flex-1 flex flex-col min-w-0 overflow-hidden pt-16 md:pt-0 transition-all duration-300">
+
+            <main class="flex-1 p-4 sm:p-6 overflow-y-auto">
                 <x-alert />
                 {{ $slot }}
             </main>
         </div>
     </div>
+
     @livewireScripts
 </body>
+
 <script>
-    // BARU (Bisa mengirim 'method' + 'params')
     document.addEventListener('livewire:initialized', () => {
-        Livewire.on('show-confirm-dialog', ({ message, method, params = null }) => { // <-- 1. Tambah 'params'
+        Livewire.on('show-confirm-dialog', ({ message, method, params = null }) => {
             Swal.fire({
                 title: 'Konfirmasi',
                 text: message,
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
+                confirmButtonColor: '#10b981', // Emerald-500
                 cancelButtonColor: '#d33',
                 confirmButtonText: 'Ya, Lanjutkan!',
                 cancelButtonText: 'Batal'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // 2. Kirim method DAN params-nya
                     if (params) {
                         Livewire.dispatch(method, params); 
                     } else {

@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 py-8 px-4 sm:px-6 lg:px-8">
+<div class="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 py-8  sm:px-6 lg:px-8">
     <div class="max-w-4xl mx-auto">
 
         <!-- Header Section -->
@@ -87,10 +87,9 @@
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <div class="bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-4">
                     <h3 class="text-lg font-semibold text-white flex items-center">
-                        <h3 class="text-lg font-semibold text-white flex items-center">
-                            <i class="fas fa-flask mr-2"></i>
-                            Jadwal Penelitian
-                        </h3>
+                        <i class="fas fa-flask mr-2"></i>
+                        Jadwal Penelitian
+                    </h3>
                 </div>
 
                 <div class="p-6 space-y-5">
@@ -141,7 +140,7 @@
                     </div>
 
                     <!-- Preview Tanggal Berakhir -->
-                    @if($endDate)
+                    @if(isset($endDate))
                     <div class="bg-gradient-to-r from-purple-50 to-violet-50 p-4 rounded-lg border border-purple-200">
                         <div class="flex items-start">
                             <div class="flex-shrink-0 mt-1">
@@ -165,7 +164,7 @@
 
                     <div class="bg-amber-50 p-3 rounded-lg border border-amber-200">
                         <div class="flex">
-                            <i class="fas fa-exclamation-triangle text-amber-500 mt-0.5 mr-2"></i>
+                            <i class="fas fa-exclamation-triangle text-amber-500 mt-0.5 mr-2 flex-shrink-0"></i>
                             <p class="text-sm text-amber-700">
                                 <strong>Catatan:</strong> Durasi penelitian bisa dimulai dari <strong>1 hari</strong>
                                 hingga <strong>1 tahun</strong>.
@@ -231,26 +230,29 @@
                                 {{ count($selectedMembers) }}/6
                             </span>
                         </div>
-                        <div class="flex flex-wrap gap-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             @foreach($selectedMembers as $member)
                             <div
-                                class="bg-white border border-emerald-200 text-gray-800 px-4 py-2.5 rounded-lg text-sm flex items-center shadow-sm hover:shadow-md transition-shadow duration-200">
-                                <div
-                                    class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center mr-2">
-                                    <i class="fas fa-user text-white text-xs"></i>
-                                </div>
-                                <div class="flex flex-col">
-                                    <span class="font-semibold text-gray-900">{{ $member['name'] }}</span>
-                                    <span class="text-xs text-gray-600">{{ $member['nim'] }}</span>
+                                class="bg-white border border-emerald-200 text-gray-800 px-3 py-2 rounded-lg text-sm flex items-center justify-between shadow-sm hover:shadow-md transition-shadow duration-200">
+                                <div class="flex items-center">
+                                    {{-- Hilangkan avatar besar di mobile --}}
+                                    <div
+                                        class="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center mr-2 flex-shrink-0">
+                                        <i class="fas fa-user text-white text-xs"></i>
+                                    </div>
+                                    <div class="flex flex-col min-w-0">
+                                        <span class="font-semibold text-gray-900 truncate">{{ $member['name'] }}</span>
+                                        <span class="text-xs text-gray-600">{{ $member['nim'] }}</span>
+                                    </div>
                                 </div>
                                 @if($member['is_representative'])
                                 <span
-                                    class="ml-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-2.5 py-1 rounded-md text-xs font-semibold shadow-sm">
+                                    class="ml-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-2 py-0.5 rounded-md text-xs font-semibold shadow-sm flex-shrink-0">
                                     Perwakilan
                                 </span>
                                 @else
                                 <button type="button" wire:click="removeMember('{{ $member['nim'] }}')"
-                                    class="ml-3 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full p-1 transition duration-200"
+                                    class="ml-3 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-full p-1 transition duration-200 flex-shrink-0"
                                     title="Hapus anggota">
                                     <i class="fas fa-times text-sm"></i>
                                 </button>
@@ -273,7 +275,7 @@
                                 <i class="fas fa-list mr-2 text-gray-600"></i>
                                 Daftar Mahasiswa
                             </h4>
-                            @if($isLoading)
+                            @if(isset($isLoading) && $isLoading)
                             <div class="flex items-center text-sm text-gray-600">
                                 <i class="fas fa-spinner fa-spin text-emerald-500 mr-2"></i>
                                 Memuat...
@@ -281,34 +283,39 @@
                             @endif
                         </div>
 
-                        @if(count($availableStudents) > 0)
+                        @if(isset($availableStudents) && count($availableStudents) > 0)
                         <div class="grid grid-cols-1 gap-3 max-h-96 overflow-y-auto pr-2">
                             @foreach($availableStudents as $student)
                             <div
-                                class="flex items-center justify-between p-4 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 hover:border-emerald-300 transition-all duration-200 shadow-sm hover:shadow-md">
+                                class="flex items-center justify-between p-3 sm:p-4 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 hover:border-emerald-300 transition-all duration-200 shadow-sm hover:shadow-md">
                                 <div class="flex items-center flex-1">
                                     <div
-                                        class="w-12 h-12 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center mr-4 flex-shrink-0">
-                                        <i class="fas fa-user-graduate text-emerald-600 text-xl"></i>
+                                        class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
+                                        <i class="fas fa-user-graduate text-emerald-600 text-lg sm:text-xl"></i>
                                     </div>
-                                    <div class="flex-1">
-                                        <div class="font-semibold text-gray-900">{{ $student['name'] }}</div>
-                                        <div class="text-sm text-gray-600 mt-0.5">
+                                    <div class="flex-1 min-w-0">
+                                        <div class="font-semibold text-sm sm:text-base text-gray-900 truncate">{{
+                                            $student['name'] }}</div>
+                                        <div class="text-xs text-gray-600 mt-0.5">
                                             <span class="font-medium">{{ $student['nim'] }}</span>
-                                            <span class="mx-1.5">•</span>
-                                            <span>{{ $student['study_program'] }}</span>
+                                            <span class="hidden sm:inline-block mx-1.5">•</span>
+                                            <span class="hidden sm:inline-block">{{ $student['study_program'] }}</span>
+                                            {{-- Tampilkan Prodi di bawah nama jika layar sangat kecil --}}
+                                            <span class="inline-block sm:hidden text-gray-500">({{
+                                                Str::limit($student['study_program'], 15) }})</span>
                                         </div>
                                     </div>
                                 </div>
                                 <button type="button"
                                     wire:click="toggleMember('{{ $student['nim'] }}', '{{ $student['name'] }}')"
-                                    class="{{ $student['is_selected'] ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-md' : 'bg-gray-100 hover:bg-gray-200 text-gray-700' }} px-5 py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center">
+                                    class="{{ $student['is_selected'] ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-md' : 'bg-gray-100 hover:bg-gray-200 text-gray-700' }} px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center flex-shrink-0">
                                     @if($student['is_selected'])
-                                    <i class="fas fa-circle-check mr-2"></i>
+                                    <i class="fas fa-circle-check mr-2 hidden sm:inline"></i>
                                     Terpilih
                                     @else
-                                    <i class="fas fa-plus mr-2"></i>
-                                    Pilih
+                                    <i class="fas fa-plus mr-2 hidden sm:inline"></i>
+                                    <span class="inline sm:hidden">Pilih</span>
+                                    <span class="hidden sm:inline">Pilih</span>
                                     @endif
                                 </button>
                             </div>
@@ -328,7 +335,8 @@
             <!-- Submit Button -->
             <div class="flex flex-col sm:flex-row justify-between items-center gap-4 pt-6 border-t border-gray-200">
                 <a href="{{ route('dashboard') }}"
-                    class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200">
+                    class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border-2 border-gray-300 rounded-lg text-gray-700 font-semibold hover:bg-gray-50 hover:border-gray-400 transition-all duration-200"
+                    wire:navigate>
                     <i class="fas fa-arrow-left mr-2"></i>
                     Kembali
                 </a>
@@ -341,11 +349,5 @@
         </form>
     </div>
     {{-- Footer --}}
-    <footer class="bg-white border-t border-gray-100 mt-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <p class="text-center text-sm text-gray-500">
-                © {{ date('Y') }} Submission System. All rights reserved.
-            </p>
-        </div>
-    </footer>
+    <x-footer class="bg-white border-t border-gray-100 mt-12" />
 </div>

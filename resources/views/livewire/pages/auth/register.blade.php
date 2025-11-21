@@ -21,11 +21,16 @@ new #[Layout('layouts.guest')] class extends Component
     public string $email = '';
     public string $password = '';
     public string $password_confirmation = '';
-    public string $nim = '';
-    public ?int $study_id = null; 
-    public $ktm; 
-    public Collection $prodiOptions; 
 
+    // TAMBAHKAN: Properti baru
+    public string $nim = '';
+    public ?int $study_id = null; // Ini akan menjadi 'id' dari study_programs
+    public $ktm; // Properti untuk file upload
+    public Collection $prodiOptions; // Properti untuk menampung data prodi
+
+    /**
+     * TAMBAHKAN: Method mount untuk mengambil data prodi dari DB
+     */
     public function mount(): void
     {
         // Mengisi dropdown dari tabel study_programs
@@ -58,6 +63,7 @@ new #[Layout('layouts.guest')] class extends Component
             'ktm.required' => 'Harap upload scan KTM Anda.',
         ]);
 
+        // UBAH: Logika registrasi
         DB::transaction(function () use ($validated) {
             // 1. Simpan file KTM
             $ktmPath = $this->ktm->store('ktm', 'public');
@@ -76,17 +82,30 @@ new #[Layout('layouts.guest')] class extends Component
                 'ktm_path' => $ktmPath,
             ]);
 
+            // 4. Assign role 'mahasiswa' via Spatie (DITAMBAHKAN/AKTIFKAN)
+            $user->assignRole('mahasiswa');
+
+            // 5. Kirim event untuk verifikasi email (tetap penting)
             event(new Registered($user));
         });
+
+        // HAPUS: Auth::login($user);
+
+        // UBAH: Redirect ke login dengan pesan sukses
         session()->flash('status', 'Pendaftaran berhasil! Silakan verifikasi email Anda. Akun Anda akan aktif setelah diverifikasi oleh Admin.');
         $this->redirect(route('login'), navigate: true);
     }
 }; ?>
 
+<!-- 
+    PERUBAHAN TATA LETAK DIMULAI DI SINI 
+    Wrapper diubah untuk menampung card 2 kolom di desktop
+-->
 <div
     class="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 flex items-center justify-center p-4 sm:p-6 lg:p-8">
 
     <!-- Card Wrapper Utama -->
+    <!-- max-w-sm di mobile, max-w-4xl di lg, dan lg:grid-cols-2 -->
     <div class="w-full max-w-sm lg:max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden lg:grid lg:grid-cols-2">
 
         <!-- [KOLOM 1: BRANDING/INFO - HANYA DESKTOP] -->
@@ -121,6 +140,7 @@ new #[Layout('layouts.guest')] class extends Component
         </div>
 
         <!-- [KOLOM 2: FORMULIR - MOBILE & DESKTOP] -->
+        <!-- Diberi padding lebih besar di desktop -->
         <div class="p-8 sm:p-12">
 
             <!-- Logo & Header (HANYA MOBILE) -->
@@ -147,6 +167,7 @@ new #[Layout('layouts.guest')] class extends Component
             </div>
 
             <!-- Formulir Registrasi -->
+            <!-- Diberi margin-top di mobile (mt-6), tapi tidak di desktop (lg:mt-0) -->
             <form wire:submit="register" class="space-y-5 mt-6 lg:mt-0">
 
                 <!-- Name -->
@@ -250,7 +271,7 @@ new #[Layout('layouts.guest')] class extends Component
                             <i class="fas fa-id-card text-gray-400"></i>
                         </div>
                         <input wire:model="ktm" id="ktm"
-                            class="block w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 cursor-pointer bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:cursor-pointer file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                            class="block w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 cursor-pointer bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
                             type="file" required />
                     </div>
                     <div wire:loading wire:target="ktm" class="mt-2 text-sm text-emerald-600">
@@ -296,4 +317,9 @@ new #[Layout('layouts.guest')] class extends Component
             </form>
         </div>
     </div> <!-- Akhir dari Card Wrapper Utama -->
+
+    <!-- Footer Text (Diposisikan di luar card) -->
+    <p class="text-center text-xs text-gray-500 absolute bottom-6 left-0 right-0">
+        © {{ date('Y') }} Submission System - Tugas Akhir Mahasiswa
+    </p>
 </div>
