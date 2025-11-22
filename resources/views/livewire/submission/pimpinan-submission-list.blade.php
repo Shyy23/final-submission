@@ -154,19 +154,13 @@ new class extends Component {
                         @endif
                     </td>
                     <td class="px-6 py-4 text-center">
-                        @if($submission->status == 'approved')
-                        <a href="{{ route('submissions.signature') }}"
-                            class="inline-flex items-center px-3 py-1.5 bg-amber-500 text-white rounded-lg hover:bg-amber-600 text-xs font-bold shadow-sm transition-colors"
-                            wire:navigate>
-                            <i class="fas fa-pen-nib mr-1.5"></i> TTD Sekarang
-                        </a>
-                        @else
+
                         <a href="{{ route('submissions.show', $submission->submission_id) }}"
                             class="inline-flex items-center px-3 py-1.5 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200 rounded-lg text-xs font-bold transition-colors"
                             title="Lihat Detail" wire:navigate>
                             <i class="fas fa-eye mr-1.5"></i> Detail
                         </a>
-                        @endif
+
                     </td>
                 </tr>
                 @endforeach

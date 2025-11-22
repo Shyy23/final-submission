@@ -1,6 +1,7 @@
 <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
     <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center">
-        <div class="w-10 h-10 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-lg flex items-center justify-center mr-3">
+        <div
+            class="w-10 h-10 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-lg flex items-center justify-center mr-3">
             <i class="fas fa-building text-emerald-600"></i>
         </div>
         <span>Informasi Perusahaan</span>

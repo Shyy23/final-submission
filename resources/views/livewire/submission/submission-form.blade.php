@@ -1,4 +1,4 @@
-<div class="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 py-8  sm:px-6 lg:px-8">
+<div class="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 py-8 px-4 sm:px-6 lg:px-8">
     <div class="max-w-4xl mx-auto">
 
         <!-- Header Section -->
@@ -104,7 +104,7 @@
                                     class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500">
                                     <i class="fas fa-calendar-day"></i>
                                 </div>
-                                <input type="date" wire:model="start_date"
+                                <input type="date" wire:model.live="start_date"
                                     class="w-full pl-10 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
                                     min="{{ now()->format('Y-m-d') }}">
                             </div>
@@ -126,7 +126,7 @@
                                     class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none text-gray-500">
                                     <i class="fas fa-hourglass-half"></i>
                                 </div>
-                                <input type="number" wire:model="duration_days" min="1" max="365"
+                                <input type="number" wire:model.live="duration_days" min="1" max="365"
                                     class="w-full pl-10 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-200"
                                     placeholder="1 - 365 hari">
                             </div>
@@ -191,10 +191,12 @@
                             <i class="fas fa-filter mr-2 text-emerald-600"></i>
                             Filter Mahasiswa
                         </h4>
+
+                        {{-- FIX: Responsivitas Filter. Flex col di mobile --}}
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Program Studi</label>
-                                <select wire:model="selectedStudy" wire:change="loadAvailableStudents"
+                                <select wire:model.live="selectedStudy"
                                     class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition duration-200">
                                     <option value="">Semua Program Studi</option>
                                     @foreach($studyPrograms as $study)
@@ -206,14 +208,16 @@
                             <div>
                                 <label class="block text-sm font-medium text-gray-700 mb-2">Cari Mahasiswa</label>
                                 <div class="relative">
-                                    <input type="text" wire:model="searchTerm"
-                                        wire:keydown.debounce.500ms="loadAvailableStudents"
+                                    <input type="text" wire:model.live.debounce.500ms="searchTerm"
                                         placeholder="Cari berdasarkan NIM atau Nama"
                                         class="w-full px-4 py-3 pr-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition duration-200 bg-white">
                                     <div class="absolute inset-y-0 right-1 flex items-center pr-3 pointer-events-none">
                                         <i class="fas fa-search text-gray-400 text-sm"></i>
                                     </div>
                                 </div>
+                                <p class="text-xs text-gray-500 mt-1 ml-1">
+                                    <i class="fas fa-info-circle mr-1"></i> Hanya mahasiswa terverifikasi yang muncul.
+                                </p>
                             </div>
                         </div>
                     </div>
@@ -234,7 +238,7 @@
                             @foreach($selectedMembers as $member)
                             <div
                                 class="bg-white border border-emerald-200 text-gray-800 px-3 py-2 rounded-lg text-sm flex items-center justify-between shadow-sm hover:shadow-md transition-shadow duration-200">
-                                <div class="flex items-center">
+                                <div class="flex items-center min-w-0"> {{-- min-w-0 for truncation --}}
                                     {{-- Hilangkan avatar besar di mobile --}}
                                     <div
                                         class="w-6 h-6 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center mr-2 flex-shrink-0">
@@ -242,13 +246,19 @@
                                     </div>
                                     <div class="flex flex-col min-w-0">
                                         <span class="font-semibold text-gray-900 truncate">{{ $member['name'] }}</span>
-                                        <span class="text-xs text-gray-600">{{ $member['nim'] }}</span>
+                                        <div class="text-xs text-gray-600 truncate">
+                                            {{ $member['nim'] }}
+                                            {{-- FIX: Sembunyikan prodi di mobile --}}
+                                            @if(isset($member['study_program']))
+                                            <span class="hidden sm:inline"> - {{ $member['study_program'] }}</span>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                                 @if($member['is_representative'])
                                 <span
                                     class="ml-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-2 py-0.5 rounded-md text-xs font-semibold shadow-sm flex-shrink-0">
-                                    Perwakilan
+                                    Ketua
                                 </span>
                                 @else
                                 <button type="button" wire:click="removeMember('{{ $member['nim'] }}')"
@@ -288,7 +298,7 @@
                             @foreach($availableStudents as $student)
                             <div
                                 class="flex items-center justify-between p-3 sm:p-4 bg-white hover:bg-gray-50 rounded-lg border border-gray-200 hover:border-emerald-300 transition-all duration-200 shadow-sm hover:shadow-md">
-                                <div class="flex items-center flex-1">
+                                <div class="flex items-center flex-1 min-w-0">
                                     <div
                                         class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center mr-3 sm:mr-4 flex-shrink-0">
                                         <i class="fas fa-user-graduate text-emerald-600 text-lg sm:text-xl"></i>
@@ -296,24 +306,23 @@
                                     <div class="flex-1 min-w-0">
                                         <div class="font-semibold text-sm sm:text-base text-gray-900 truncate">{{
                                             $student['name'] }}</div>
-                                        <div class="text-xs text-gray-600 mt-0.5">
+                                        <div class="text-xs text-gray-600 mt-0.5 truncate">
                                             <span class="font-medium">{{ $student['nim'] }}</span>
+
+                                            {{-- FIX: Sembunyikan prodi SEPENUHNYA di mobile --}}
                                             <span class="hidden sm:inline-block mx-1.5">•</span>
                                             <span class="hidden sm:inline-block">{{ $student['study_program'] }}</span>
-                                            {{-- Tampilkan Prodi di bawah nama jika layar sangat kecil --}}
-                                            <span class="inline-block sm:hidden text-gray-500">({{
-                                                Str::limit($student['study_program'], 15) }})</span>
                                         </div>
                                     </div>
                                 </div>
                                 <button type="button"
                                     wire:click="toggleMember('{{ $student['nim'] }}', '{{ $student['name'] }}')"
-                                    class="{{ $student['is_selected'] ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-md' : 'bg-gray-100 hover:bg-gray-200 text-gray-700' }} px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 flex items-center flex-shrink-0">
+                                    class="{{ $student['is_selected'] ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-md' : 'bg-gray-100 hover:bg-gray-200 text-gray-700' }} px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 flex items-center flex-shrink-0 ml-2">
                                     @if($student['is_selected'])
-                                    <i class="fas fa-circle-check mr-2 hidden sm:inline"></i>
-                                    Terpilih
+                                    <i class="fas fa-circle-check mr-0 sm:mr-2"></i>
+                                    <span class="hidden sm:inline">Terpilih</span>
                                     @else
-                                    <i class="fas fa-plus mr-2 hidden sm:inline"></i>
+                                    <i class="fas fa-plus mr-0 sm:mr-2"></i>
                                     <span class="inline sm:hidden">Pilih</span>
                                     <span class="hidden sm:inline">Pilih</span>
                                     @endif
@@ -325,7 +334,8 @@
                         <div class="text-center py-12">
                             <i class="fas fa-users-slash text-5xl text-gray-300 mb-3"></i>
                             <p class="text-gray-500 font-medium">Tidak ada mahasiswa yang ditemukan</p>
-                            <p class="text-sm text-gray-400 mt-1">Coba ubah filter atau kata kunci pencarian</p>
+                            <p class="text-xs text-gray-400 mt-1">Pastikan mahasiswa sudah terverifikasi dan kata kunci
+                                benar.</p>
                         </div>
                         @endif
                     </div>

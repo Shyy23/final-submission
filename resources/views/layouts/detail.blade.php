@@ -18,6 +18,7 @@
     <!-- SweetAlert2 -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -25,91 +26,102 @@
     @livewireStyles
 </head>
 
-<body class="font-sans antialiased bg-gradient-to-br from-emerald-50 via-white to-teal-50">
+<body class="font-sans antialiased bg-gradient-to-br from-emerald-50 via-white to-teal-50 text-gray-900">
+
     <!-- Header -->
-    <header class="bg-white/80 backdrop-blur-sm shadow-sm border-b border-gray-200 sticky top-0 z-40">
+    <header
+        class="bg-white/80 backdrop-blur-sm shadow-sm border-b border-gray-200 sticky top-0 z-40 transition-all duration-300">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center py-4">
-                <!-- Back Button & Title -->
-                <div class="flex items-center space-x-4">
+            <div class="flex justify-between items-center h-16 sm:h-auto sm:py-4">
+
+                <!-- Left Side: Back Button & Title -->
+                <div class="flex items-center gap-2 sm:gap-4">
                     {{-- Dynamic Back Button berdasarkan Role --}}
                     @auth
-                    @role('mahasiswa')
-                    <a href="{{ route('submissions.history') }}"
-                        class="flex items-center px-3 py-2 text-gray-600 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-all duration-200">
-                        <i class="fas fa-arrow-left text-lg mr-2"></i>
-                        <span class="font-medium">Kembali</span>
-                    </a>
-                    @endrole
+                    @php
+                    $backRoute = '#';
+                    $hoverClass = 'text-gray-600';
 
-                    @role('admin')
-                    <a href="{{ route('admin.submissions') }}"
-                        class="flex items-center px-3 py-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200">
-                        <i class="fas fa-arrow-left text-lg mr-2"></i>
-                        <span class="font-medium">Kembali</span>
-                    </a>
-                    @endrole
+                    if(Auth::user()->hasRole('mahasiswa')) {
+                    $backRoute = route('submissions.history');
+                    $hoverClass = 'hover:text-emerald-600 hover:bg-emerald-50';
+                    } elseif(Auth::user()->hasRole('admin')) {
+                    $backRoute = route('admin.submissions');
+                    $hoverClass = 'hover:text-blue-600 hover:bg-blue-50';
+                    } elseif(Auth::user()->hasRole('pimpinan')) {
+                    $backRoute = route('submissions.signature');
+                    $hoverClass = 'hover:text-purple-600 hover:bg-purple-50';
+                    }
+                    @endphp
 
-                    @role('pimpinan')
-                    <a href="{{ route('submissions.signature') }}"
-                        class="flex items-center px-3 py-2 text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-all duration-200">
-                        <i class="fas fa-arrow-left text-lg mr-2"></i>
-                        <span class="font-medium">Kembali</span>
+                    <a href="{{ $backRoute }}"
+                        class="flex items-center justify-center p-2 sm:px-3 sm:py-2 text-gray-600 rounded-lg transition-all duration-200 {{ $hoverClass }}">
+                        <i class="fas fa-arrow-left text-lg sm:mr-2"></i>
+                        {{-- Sembunyikan teks 'Kembali' di mobile --}}
+                        <span class="font-medium hidden sm:inline">Kembali</span>
                     </a>
-                    @endrole
                     @endauth
 
-                    <div class="h-6 w-px bg-gray-300"></div>
+                    {{-- Divider: Sembunyikan di mobile --}}
+                    <div class="h-6 w-px bg-gray-300 hidden sm:block"></div>
 
                     <div class="flex items-center">
+                        {{-- Icon Box: Kecilkan di mobile (w-8 h-8) --}}
                         <div
-                            class="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-lg flex items-center justify-center mr-3 shadow-sm">
-                            <i class="fas fa-file-alt text-white"></i>
+                            class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-lg flex items-center justify-center mr-2 sm:mr-3 shadow-sm flex-shrink-0">
+                            <i class="fas fa-file-alt text-white text-sm sm:text-base"></i>
                         </div>
-                        <div>
-                            <h1 class="text-lg font-bold text-gray-900">
+
+                        {{-- Title Text --}}
+                        <div class="leading-tight">
+                            <h1 class="text-sm sm:text-lg font-bold text-gray-900">
                                 Detail Pengajuan
                             </h1>
-                            <p class="text-xs text-gray-500">Surat Tugas Akhir</p>
+                            <p class="text-[10px] sm:text-xs text-gray-500 hidden xs:block">Surat Tugas Akhir</p>
                         </div>
                     </div>
                 </div>
 
-                <!-- User Info -->
+                <!-- Right Side: User Info -->
                 @auth
-                <div class="flex items-center space-x-3">
+                <div class="flex items-center gap-2 sm:gap-3">
+                    {{-- Text Info: Hanya muncul di tablet ke atas (sm:block) --}}
                     <div class="text-right hidden sm:block">
                         <p class="text-sm font-semibold text-gray-800">{{ Auth::user()->name }}</p>
                         <p class="text-xs text-gray-500">{{ Auth::user()->email }}</p>
                     </div>
+
+                    {{-- Avatar: Kecilkan sedikit di mobile --}}
                     <div
-                        class="w-10 h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center shadow-md">
-                        <span class="text-sm font-bold text-white">
+                        class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-emerald-400 to-teal-500 rounded-full flex items-center justify-center shadow-md flex-shrink-0">
+                        <span class="text-xs sm:text-sm font-bold text-white">
                             {{ strtoupper(substr(Auth::user()->name, 0, 2)) }}
                         </span>
                     </div>
 
-                    {{-- Dynamic Role Badge berdasarkan Role --}}
-                    @role('mahasiswa')
-                    <span
-                        class="px-3 py-1 bg-gradient-to-r from-emerald-100 to-teal-100 text-emerald-700 text-xs font-semibold rounded-full border border-emerald-200">
-                        Mahasiswa
-                    </span>
-                    @endrole
+                    {{-- Role Badge: Sembunyikan di mobile agar tidak penuh --}}
+                    <div class="hidden sm:block">
+                        @role('mahasiswa')
+                        <span
+                            class="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full border border-emerald-200">
+                            Mahasiswa
+                        </span>
+                        @endrole
 
-                    @role('admin')
-                    <span
-                        class="px-3 py-1 bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 text-xs font-semibold rounded-full border border-blue-200">
-                        Admin
-                    </span>
-                    @endrole
+                        @role('admin')
+                        <span
+                            class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full border border-blue-200">
+                            Admin
+                        </span>
+                        @endrole
 
-                    @role('pimpinan')
-                    <span
-                        class="px-3 py-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 text-xs font-semibold rounded-full border border-purple-200">
-                        Pimpinan
-                    </span>
-                    @endrole
+                        @role('pimpinan')
+                        <span
+                            class="px-3 py-1 bg-purple-100 text-purple-700 text-xs font-semibold rounded-full border border-purple-200">
+                            Pimpinan
+                        </span>
+                        @endrole
+                    </div>
                 </div>
                 @endauth
             </div>
@@ -117,39 +129,36 @@
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {{ $slot }}
     </main>
 
     <!-- Footer -->
-    <footer class="bg-white/80 backdrop-blur-sm border-t border-gray-200 mt-12">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <p class="text-center text-sm text-gray-500">
-                © {{ date('Y') }} Submission System. All rights reserved.
-            </p>
-        </div>
-    </footer>
+    <x-footer />
 
     <!-- Livewire Scripts -->
     @livewireScripts
 
     <!-- Scripts -->
     <script>
-        // BARU (Bisa mengirim 'method' + 'params')
-    document.addEventListener('livewire:initialized', () => {
-        Livewire.on('show-confirm-dialog', ({ message, method, params = null }) => { // <-- 1. Tambah 'params'
+        document.addEventListener('livewire:initialized', () => {
+        Livewire.on('show-confirm-dialog', ({ message, method, params = null }) => {
             Swal.fire({
                 title: 'Konfirmasi',
                 text: message,
                 icon: 'warning',
                 showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
+                confirmButtonColor: '#10b981', // Emerald-500 matches theme
+                cancelButtonColor: '#ef4444', // Red-500
                 confirmButtonText: 'Ya, Lanjutkan!',
-                cancelButtonText: 'Batal'
+                cancelButtonText: 'Batal',
+                customClass: {
+                    popup: 'rounded-xl',
+                    confirmButton: 'rounded-lg',
+                    cancelButton: 'rounded-lg'
+                }
             }).then((result) => {
                 if (result.isConfirmed) {
-                    // 2. Kirim method DAN params-nya
                     if (params) {
                         Livewire.dispatch(method, params); 
                     } else {

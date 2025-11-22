@@ -18,8 +18,8 @@ class SubmissionForm extends Component
     public $company_name;
     public $address_company;
     public $note;
-    public $start_date; // Tambahkan field tanggal mulai
-    public $duration_days; // Tambahkan field durasi dalam hari
+    public $start_date; 
+    public $duration_days;
 
     // Untuk filtering
     public $selectedStudy = '';
@@ -29,7 +29,7 @@ class SubmissionForm extends Component
     public $selectedMembers = [];
     public $availableStudents = [];
     public $isLoading = false;
-    public $endDate = null; // Untuk perhitungan tanggal berakhir
+    public $endDate = null; 
 
     protected $rules = [
         'company_name' => 'required|string|max:255',
@@ -43,9 +43,14 @@ class SubmissionForm extends Component
     public function mount()
     {
         $currentUserNim = Auth::user()->student->nim;
+        
+        // FIX: Ambil data study program user yang sedang login agar konsisten
+        $myStudy = Auth::user()->student->studyProgram->study_name ?? '-';
+
         $this->selectedMembers[$currentUserNim] = [
             'nim' => $currentUserNim,
             'name' => Auth::user()->name,
+            'study_program' => $myStudy, // Simpan prodi
             'is_representative' => true
         ];
 
@@ -62,11 +67,10 @@ class SubmissionForm extends Component
         $this->calculateEndDate();
     }
 
- private function calculateEndDate()
+    private function calculateEndDate()
     {
         if ($this->start_date && $this->duration_days !== null && $this->duration_days !== '') {
             try {
-               
                 $duration = is_numeric($this->duration_days) ? (int) $this->duration_days : 0;
                 
                 if ($duration > 0) {
@@ -84,13 +88,16 @@ class SubmissionForm extends Component
         }
     }
 
-
     public function loadAvailableStudents()
     {
         $this->isLoading = true;
 
         $query = Student::with(['user', 'studyProgram'])
-            ->where('nim', '!=', Auth::user()->student->nim);
+            ->where('nim', '!=', Auth::user()->student->nim)
+            // FIX: Tambahkan filter whereHas user -> is_verified = true
+            ->whereHas('user', function($q) {
+                $q->where('is_verified', true);
+            });
 
         if ($this->selectedStudy) {
             $query->where('study_id', $this->selectedStudy);
@@ -105,12 +112,12 @@ class SubmissionForm extends Component
             });
         }
 
-        $this->availableStudents = $query->get()
+        $this->availableStudents = $query->limit(10)->get() // Limit agar tidak terlalu berat
             ->map(function ($student) {
                 return [
                     'nim' => $student->nim,
                     'name' => $student->user->name,
-                    'study_program' => $student->studyProgram->study_name,
+                    'study_program' => $student->studyProgram->study_name ?? '-',
                     'is_selected' => isset($this->selectedMembers[$student->nim])
                 ];
             })->toArray();
@@ -125,7 +132,6 @@ class SubmissionForm extends Component
 
     public function updatedSearchTerm()
     {
-        // Debounce untuk menghindari terlalu banyak request
         $this->loadAvailableStudents();
     }
 
@@ -139,9 +145,14 @@ class SubmissionForm extends Component
                 return;
             }
 
+            // FIX: Cari data mahasiswa untuk mendapatkan nama Prodinya
+            $studentData = Student::with('studyProgram')->where('nim', $nim)->first();
+            $studyName = $studentData->studyProgram->study_name ?? '-';
+
             $this->selectedMembers[$nim] = [
                 'nim' => $nim,
                 'name' => $name,
+                'study_program' => $studyName, // Simpan prodi ke array selected
                 'is_representative' => false
             ];
         }

@@ -84,4 +84,6 @@
             <span class="text-gray-800 font-medium">{{ $submission->updated_at->format('d M Y H:i') }}</span>
         </div>
     </div>
+
+
 </div>

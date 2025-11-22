@@ -3,7 +3,7 @@
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\SubmissionController;
 use App\Livewire\Admin\UserManagement;
-use App\Livewire\SubmissionDetail;
+use App\Livewire\Submission\SubmissionDetail;
 use App\Livewire\SubmissionForm;
 use App\Livewire\SubmissionList;
 use Illuminate\Support\Facades\Route;
