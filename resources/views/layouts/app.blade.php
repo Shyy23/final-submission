@@ -47,31 +47,32 @@
     </div>
 
     @livewireScripts
-</body>
-
-<script>
-    document.addEventListener('livewire:initialized', () => {
-        Livewire.on('show-confirm-dialog', ({ message, method, params = null }) => {
-            Swal.fire({
-                title: 'Konfirmasi',
-                text: message,
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#10b981', // Emerald-500
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Ya, Lanjutkan!',
-                cancelButtonText: 'Batal'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    if (params) {
-                        Livewire.dispatch(method, params); 
-                    } else {
-                        Livewire.dispatch(method);
+    <script>
+        // Mendaftarkan event listener SweetAlert2 global untuk Livewire
+        if (typeof Livewire !== 'undefined') {
+            Livewire.on('show-confirm-dialog', ({ message, method, params = null }) => {
+                Swal.fire({
+                    title: 'Konfirmasi',
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#10b981', // Emerald-500
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Lanjutkan!',
+                    cancelButtonText: 'Batal'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Dispatch event kembali ke Livewire dengan metode yang diminta
+                        if (params) {
+                            Livewire.dispatch(method, params); 
+                        } else {
+                            Livewire.dispatch(method);
+                        }
                     }
-                }
+                });
             });
-        });
-    });
-</script>
+        }
+    </script>
+</body>
 
 </html>

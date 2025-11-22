@@ -54,7 +54,7 @@ class SubmissionDetail extends Component
             'withQr'     => $withQr,
             'qrPath'     => ($withQr && $this->submission->qr_url) ? public_path('qr-code/' . $this->submission->qr_url) : null,
             'date'       => $dateIndo,
-            'nomor_surat'=> 'B/'.$this->submission->id.'/FSI-Unjani/'. \Carbon\Carbon::now()->format('m/Y'),
+            'nomor_surat'=> 'B/'.$this->submission->submission_id.'/FSI-Unjani/'. \Carbon\Carbon::now()->format('m/Y'),
             'logo_ykep'  => public_path('assets/img/ykep.png'),
             'logo_unjani' => public_path('assets/img/unjani.png'), 
         ];
@@ -63,7 +63,7 @@ class SubmissionDetail extends Component
             Storage::makeDirectory('documents');
         }
 
-        $fileName = 'surat_tugas_' . $this->submission->id . '.pdf';
+        $fileName = 'surat_tugas_' . $this->submission->submission_id . '.pdf';
         $storagePath = 'documents/' . $fileName;
         
         $pdf = Pdf::loadView('pdf.surat_tugas', $data)->setPaper('a4', 'portrait');

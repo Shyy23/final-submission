@@ -3,128 +3,148 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Status Pengajuan Surat Tugas Akhir</title>
     <style>
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: Arial, sans-serif;
             line-height: 1.6;
             color: #333;
+        }
+
+        .container {
             max-width: 600px;
             margin: 0 auto;
             padding: 20px;
+            border: 1px solid #eee;
+            border-radius: 10px;
         }
 
         .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
             text-align: center;
-            border-radius: 10px 10px 0 0;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #eee;
+            margin-bottom: 20px;
         }
 
-        .content {
-            background: #f9f9f9;
-            padding: 30px;
-            border-radius: 0 0 10px 10px;
+        .header img {
+            height: 60px;
         }
 
         .status-badge {
             display: inline-block;
             padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: bold;
-            margin: 10px 0;
-        }
-
-        .status-approved {
-            background: #d4edda;
-            color: #155724;
-        }
-
-        .status-rejected {
-            background: #f8d7da;
-            color: #721c24;
-        }
-
-        .status-verified {
-            background: #d1ecf1;
-            color: #0c5460;
-        }
-
-        .button {
-            display: inline-block;
-            padding: 12px 24px;
-            background: #667eea;
+            border-radius: 50px;
             color: white;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 12px;
+            margin-bottom: 15px;
+        }
+
+        .bg-green {
+            background-color: #10b981;
+        }
+
+        .bg-red {
+            background-color: #ef4444;
+        }
+
+        .bg-blue {
+            background-color: #3b82f6;
+        }
+
+        .content {
+            margin-bottom: 25px;
+        }
+
+        .details {
+            background-color: #f9fafb;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .details p {
+            margin: 5px 0;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #059669;
+            color: #ffffff;
+            padding: 12px 25px;
             text-decoration: none;
             border-radius: 5px;
-            margin: 10px 5px;
-        }
-
-        .info-box {
-            background: white;
-            border-left: 4px solid #667eea;
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 0 5px 5px 0;
+            font-weight: bold;
+            margin-top: 20px;
         }
 
         .footer {
-            text-align: center;
             margin-top: 30px;
+            text-align: center;
+            font-size: 12px;
+            color: #999;
+            border-top: 1px solid #eee;
             padding-top: 20px;
-            border-top: 1px solid #ddd;
-            color: #666;
-            font-size: 14px;
         }
     </style>
 </head>
 
 <body>
-    <div class="header">
-        <h1>Notifikasi Status Pengajuan</h1>
-        <p>Sistem Surat Tugas Akhir</p>
-    </div>
+    <div class="container">
+        <div class="header">
+            <h2>Submission System FSI UNJANI</h2>
+        </div>
 
-    <div class="content">
-        <h2>Halo {{ $submission->representative->user->name }},</h2>
+        <div style="text-align: center;">
+            @if($statusType === 'approved')
+            <span class="status-badge bg-blue">Disetujui Admin</span>
+            @elseif($statusType === 'rejected')
+            <span class="status-badge bg-red">Ditolak / Perlu Revisi</span>
+            @elseif($statusType === 'verified')
+            <span class="status-badge bg-green">Selesai & Terverifikasi</span>
+            @endif
+        </div>
 
-        <p>Pengajuan surat tugas akhir Anda untuk perusahaan <strong>{{ $submission->company_name }}</strong> telah
-            <span class="status-badge status-{{ $status }}">
-                {{ $statusText }}
-            </span>
-        </p>
+        <div class="content">
+            <p>Halo, <strong>{{ $submission->representative->user->name }}</strong></p>
 
-        <div class="info-box">
-            <h3>Detail Pengajuan:</h3>
-            <p><strong>Perusahaan:</strong> {{ $submission->company_name }}</p>
-            <p><strong>Posisi:</strong> {{ $submission->position }}</p>
-            <p><strong>Perwakilan:</strong> {{ $submission->representative->user->name }}</p>
-            <p><strong>Ditindaklanjuti oleh:</strong> {{ $actionBy }}</p>
-            <p><strong>Waktu:</strong> {{ now()->translatedFormat('l, d F Y H:i') }}</p>
+            <p>
+                @if($statusType === 'approved')
+                Pengajuan surat tugas Anda telah <strong>DISETUJUI</strong> oleh Admin. Saat ini dokumen sedang menunggu
+                tanda tangan digital dari Pimpinan.
+                @elseif($statusType === 'rejected')
+                Mohon maaf, pengajuan surat tugas Anda <strong>DITOLAK</strong> atau memerlukan revisi. Silakan perbaiki
+                data sesuai catatan di bawah ini.
+                @elseif($statusType === 'verified')
+                Selamat! Surat tugas Anda telah <strong>DIVERIFIKASI</strong> dan ditandatangani secara digital oleh
+                Pimpinan. Anda sekarang dapat mengunduh surat tugas tersebut.
+                @endif
+            </p>
 
             @if($feedback)
-            <p><strong>Catatan/Komentar:</strong><br>{{ $feedback }}</p>
+            <div class="details" style="border-left: 4px solid #ccc; margin: 20px 0;">
+                <strong>Catatan / Feedback:</strong><br>
+                <em>"{{ $feedback }}"</em>
+            </div>
             @endif
+
+            <div class="details">
+                <strong>Detail Pengajuan:</strong>
+                <p>Perusahaan: {{ $submission->company_name }}</p>
+                <p>Tanggal Pengajuan: {{ $submission->created_at->format('d M Y') }}</p>
+            </div>
+
+            <div style="text-align: center;">
+                <a href="{{ route('submissions.show', $submission->submission_id) }}" class="btn">
+                    Lihat Detail Pengajuan
+                </a>
+            </div>
         </div>
 
-        <div style="text-align: center; margin: 25px 0;">
-            <a href="{{ $detailUrl }}" class="button">Lihat Detail Pengajuan</a>
-
-            @if($status === 'verified')
-            <a href="{{ $verificationUrl }}" class="button" style="background: #28a745;">
-                Verifikasi QR Code
-            </a>
-            @endif
+        <div class="footer">
+            <p>Email ini dikirim secara otomatis oleh Sistem Pengajuan Tugas Akhir FSI UNJANI.</p>
+            <p>&copy; {{ date('Y') }} FSI UNJANI</p>
         </div>
-
-        <p>Silakan login ke sistem untuk informasi lebih lanjut atau menghubungi administrator jika ada pertanyaan.</p>
-    </div>
-
-    <div class="footer">
-        <p>Email ini dikirim secara otomatis. Mohon tidak membalas email ini.</p>
-        <p>&copy; {{ date('Y') }} Sistem Surat Tugas Akhir. All rights reserved.</p>
     </div>
 </body>
 

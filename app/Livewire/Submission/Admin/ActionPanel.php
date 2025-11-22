@@ -3,9 +3,12 @@
 namespace App\Livewire\Submission\Admin;
 
 use App\Livewire\Submission\SubmissionDetail;
+use App\Mail\SubmissionStatusNotification;
 use Livewire\Component;
 use App\Models\Submission;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Attributes\On;
 
@@ -71,33 +74,51 @@ class ActionPanel extends Component
         $this->validate();
 
         try {
+            // Simpan status type untuk email (approve/reject)
+            $emailStatusType = $this->actionType === 'approve' ? 'approved' : 'rejected';
+            
             if ($this->actionType === 'approve') {
                 // 1. Update Status
                 $this->submission->update([
                     'status' => 'approved',
                     'admin_id' => Auth::id(),
                     'feedback' => $this->feedback,
-                    'sent_to_leader' => false, // Reset, belum dikirim
+                    'sent_to_leader' => false, 
                 ]);
 
-                // 2. Generate PDF Awal (Tanpa QR)
+                // 2. Generate PDF
                 $this->dispatch('generateAndSavePdf', withQr: false)->to(SubmissionDetail::class); 
                 
-                session()->flash('message', 'Pengajuan disetujui. Dokumen berhasil dibuat. Silakan cek preview sebelum dikirim ke pimpinan.');
+                session()->flash('message', 'Pengajuan disetujui. Dokumen berhasil dibuat.');
 
             } else {
                 $this->submission->update([
                     'status' => 'rejected',
                     'feedback' => $this->feedback,
-                    'document_path' => null // Hapus draft jika ada
+                    'document_path' => null 
                 ]);
                 
-                // Kirim Email Notifikasi Reject di sini
                 session()->flash('message', 'Pengajuan ditolak.');
             }
 
+            // --- LOGIKA KIRIM EMAIL NOTIFIKASI ---
+            try {
+                $representative = $this->submission->representative;
+                if ($representative && $representative->user && $representative->user->email) {
+                    // Kirim Email
+                    Mail::to($representative->user->email)->send(
+                        new SubmissionStatusNotification($this->submission, $emailStatusType, $this->feedback)
+                    );
+                    Log::info("Email notifikasi ($emailStatusType) dikirim ke: " . $representative->user->email);
+                }
+            } catch (\Exception $mailEx) {
+                // Jangan hentikan proses hanya karena email gagal
+                Log::error('Gagal mengirim email notifikasi admin: ' . $mailEx->getMessage());
+            }
+            // -------------------------------------
+
             $this->showActionModal = false;
-            $this->dispatch('submission-updated'); // Beri tahu parent untuk muat ulang
+            $this->dispatch('submission-updated'); 
             
         } catch (\Exception $e) {
              session()->flash('error', 'Gagal memproses aksi: ' . $e->getMessage());
@@ -172,6 +193,16 @@ class ActionPanel extends Component
         }
     }
 
+    public function confirmDeleteDocument()
+    {
+        $this->dispatch('show-confirm-dialog', 
+            message: 'Apakah Anda yakin ingin menghapus/reset dokumen ini? Status pengajuan akan kembali menjadi Pending.', 
+            method: 'do-delete-document-admin'
+        );
+    }
+
+    // 2. Tambahkan Listener Event
+    #[On('do-delete-document-admin')]
     public function deleteDocument()
     {
         if ($this->submission->status !== 'approved') {
