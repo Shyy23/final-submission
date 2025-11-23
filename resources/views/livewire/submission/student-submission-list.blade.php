@@ -56,10 +56,27 @@ new class extends Component {
 }; ?>
 
 <div>
+    {{-- Header Section --}}
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+        <div>
+            <h2 class="text-xl sm:text-2xl font-bold text-gray-800">Riwayat Pengajuan</h2>
+            <p class="text-xs sm:text-sm text-gray-600 mt-1">Kelola dan pantau status pengajuan surat tugas akhir Anda
+            </p>
+        </div>
+        <div>
+            <a href="{{ route('submissions.create') }}"
+                class="inline-flex items-center justify-center px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg transition-all shadow-sm w-full sm:w-auto"
+                wire:navigate>
+                <i class="fas fa-plus mr-2"></i>
+                Buat Pengajuan
+            </a>
+        </div>
+    </div>
+
     {{-- Filter & Search --}}
     <div class="bg-white rounded-xl shadow-sm p-4 mb-6 border border-gray-100">
-        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div class="flex-1">
+        <div class="flex flex-col md:flex-row md:items-center gap-3">
+            <div class="flex-1 w-full">
                 <div class="relative">
                     <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
                     <input type="text" wire:model.live.debounce.300ms="search"
@@ -67,9 +84,10 @@ new class extends Component {
                         class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm">
                 </div>
             </div>
-            <div class="flex gap-2">
+
+            <div class="grid grid-cols-2 sm:flex sm:flex-row gap-2 w-full md:w-auto">
                 <select wire:model.live="status"
-                    class="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm">
+                    class="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm w-full sm:w-auto">
                     <option value="">Semua Status</option>
                     <option value="pending">Menunggu</option>
                     <option value="approved">Disetujui</option>
@@ -82,123 +100,88 @@ new class extends Component {
 
     {{-- Empty State --}}
     @if($totalSubmissions === 0 && empty($search) && empty($status))
-    <div class="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
+    <div class="bg-white rounded-xl shadow-sm p-8 sm:p-12 text-center border border-gray-100">
         <div class="flex justify-center mb-6">
             <div
-                class="w-24 h-24 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center">
-                <i class="fas fa-inbox text-5xl text-emerald-500"></i>
+                class="w-20 h-20 sm:w-24 sm:h-24 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-file-contract text-4xl sm:text-5xl text-emerald-500"></i>
             </div>
         </div>
-        <h3 class="text-2xl font-bold text-gray-800 mb-3">Belum Ada Riwayat Pengajuan</h3>
-        <p class="text-gray-600 mb-6 max-w-md mx-auto">
-            Anda belum memiliki pengajuan submission. Mulai buat pengajuan pertama Anda untuk tugas akhir sekarang!
+        <h3 class="text-xl sm:text-2xl font-bold text-gray-800 mb-2">Belum Ada Pengajuan</h3>
+        <p class="text-sm sm:text-base text-gray-600 mb-6 max-w-md mx-auto">
+            Anda belum memiliki riwayat pengajuan. Mulai langkah awal tugas akhir Anda sekarang.
         </p>
         <a href="{{ route('submissions.create') }}"
-            class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-lg shadow-md transition-all duration-300"
+            class="inline-flex items-center px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-md transition-all duration-300"
             wire:navigate>
             <i class="fas fa-plus mr-2"></i>
-            Buat Pengajuan Pertama
+            Buat Pengajuan Baru
         </a>
     </div>
     @elseif($totalSubmissions === 0)
     <div class="bg-white rounded-xl shadow-sm p-12 text-center border border-gray-100">
-        <p class="text-gray-500">Tidak ditemukan data yang sesuai filter.</p>
+        <div class="flex justify-center mb-4">
+            <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-search text-gray-400 text-2xl"></i>
+            </div>
+        </div>
+        <p class="text-gray-500 font-medium">Tidak ditemukan data yang sesuai filter.</p>
+        <button wire:click="$set('search', '')" class="text-emerald-600 hover:underline text-sm mt-2">Hapus
+            pencarian</button>
     </div>
     @else
-    {{-- Submissions Table --}}
+
+    {{-- Content Wrapper --}}
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <div class="p-6 border-b border-gray-100 bg-gradient-to-r from-emerald-50 to-teal-50">
+
+        {{-- Table Title (Desktop Only) --}}
+        <div class="hidden md:block p-6 border-b border-gray-100 bg-gradient-to-r from-emerald-50 to-teal-50">
             <h3 class="text-lg font-semibold text-gray-800 flex items-center">
-                <i class="fas fa-list mr-2 text-emerald-500"></i>
-                Semua Pengajuan Submission
+                <i class="fas fa-list-ul mr-2 text-emerald-500"></i>
+                Daftar Pengajuan Anda
             </h3>
-            <p class="text-sm text-gray-600 mt-1">Daftar lengkap riwayat pengajuan surat tugas akhir Anda</p>
         </div>
-        <div class="overflow-x-auto">
-            <table class="w-full">
+
+        {{-- DESKTOP VIEW: TABLE --}}
+        <div class="hidden md:block overflow-x-auto">
+            <table class="w-full text-sm text-left">
                 <thead class="bg-gray-50 border-b border-gray-200">
                     <tr>
-                        <th
-                            class="px-3 md:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            No
-                        </th>
-                        <th
-                            class="px-3 md:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Perusahaan
-                        </th>
-                        {{-- HIDE DI MOBILE/TABLET --}}
-                        <th
-                            class="hidden md:table-cell px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Alamat
-                        </th>
-                        <th
-                            class="hidden md:table-cell px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Tanggal Pengajuan
-                        </th>
-                        {{-- END HIDE --}}
-                        <th
-                            class="px-3 md:px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Status
-                        </th>
-                        {{-- HIDE DI MOBILE/TABLET --}}
-                        <th
-                            class="hidden md:table-cell px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Catatan
-                        </th>
-                        {{-- END HIDE --}}
-                        <th
-                            class="px-3 md:px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
-                            Aksi
-                        </th>
+                        <th class="px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-12">No</th>
+                        <th class="px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider w-1/3">
+                            Instansi Tujuan</th>
+                        <th class="px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Tanggal</th>
+                        <th class="px-6 py-4 text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-4 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                            Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white divide-y divide-gray-100">
                     @foreach($submissions as $index => $submission)
                     <tr class="hover:bg-gray-50 transition-colors duration-200">
-                        {{-- No --}}
-                        <td class="px-3 md:px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-800">
-                                {{ ($submissions->currentPage() - 1) * $submissions->perPage() + $index + 1 }}
-                            </div>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">
+                            {{ ($submissions->currentPage() - 1) * $submissions->perPage() + $index + 1 }}
                         </td>
-                        {{-- Perusahaan (Kolom Utama) --}}
-                        <td class="px-3 md:px-6 py-4">
-                            <div class="flex items-center">
-                                <div
-                                    class="flex-shrink-0 w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-emerald-100 to-teal-100 rounded-lg flex items-center justify-center mr-3">
-                                    <i class="fas fa-building text-emerald-600 text-sm md:text-base"></i>
-                                </div>
-                                <div>
-                                    <div class="text-sm font-semibold text-gray-800">{{ $submission->company_name }}
-                                    </div>
-                                    {{-- Tampilkan Tanggal di bawah nama Perusahaan (Khusus Mobile) --}}
-                                    <div class="md:hidden text-xs text-gray-500 mt-1">
-                                        <i class="far fa-calendar-alt text-gray-400 mr-1"></i>
-                                        {{ $submission->created_at->format('d M Y') }}
-                                    </div>
+                        <td class="px-6 py-4">
+                            <div class="flex flex-col gap-1 min-w-[200px]">
+                                <div class="text-sm font-bold text-gray-800">{{ $submission->company_name }}</div>
+                                <div class="text-xs text-gray-500 flex items-start"
+                                    title="{{ $submission->address_company }}">
+                                    <i class="fas fa-map-marker-alt text-gray-400 mr-1.5 mt-0.5 flex-shrink-0"></i>
+                                    <span class="line-clamp-1">{{ Str::limit($submission->address_company, 60) }}</span>
                                 </div>
                             </div>
                         </td>
-                        {{-- Alamat (Hidden Mobile) --}}
-                        <td class="hidden md:table-cell px-6 py-4">
-                            <div class="text-sm text-gray-600 max-w-xs">
-                                <i class="fas fa-map-marker-alt text-gray-400 mr-1"></i>
-                                {{ Str::limit($submission->address_company, 50) }}
-                            </div>
-                        </td>
-                        {{-- Tanggal Pengajuan (Hidden Mobile) --}}
-                        <td class="hidden md:table-cell px-6 py-4 whitespace-nowrap">
+                        <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-800">
-                                <i class="far fa-calendar text-gray-400 mr-1"></i>
+                                <i class="far fa-calendar text-gray-400 mr-1.5"></i>
                                 {{ $submission->created_at->format('d M Y') }}
                             </div>
-                            <div class="text-xs text-gray-500">
-                                <i class="far fa-clock text-gray-400 mr-1"></i>
+                            <div class="text-xs text-gray-500 mt-0.5 ml-5">
                                 {{ $submission->created_at->format('H:i') }} WIB
                             </div>
                         </td>
-                        {{-- Status --}}
-                        <td class="px-3 md:px-6 py-4 whitespace-nowrap">
+                        <td class="px-6 py-4 whitespace-nowrap">
                             @php
                             $statusConfig = [
                             'pending' => ['bg' => 'bg-amber-100', 'text' => 'text-amber-700', 'label' => 'Menunggu',
@@ -206,41 +189,22 @@ new class extends Component {
                             'approved' => ['bg' => 'bg-emerald-100', 'text' => 'text-emerald-700', 'label' =>
                             'Disetujui', 'icon' => 'fa-thumbs-up'],
                             'rejected' => ['bg' => 'bg-red-100', 'text' => 'text-red-700', 'label' => 'Ditolak', 'icon'
-                            => 'fa-thumbs-down'],
+                            => 'fa-times-circle'],
                             'verified' => ['bg' => 'bg-teal-100', 'text' => 'text-teal-700', 'label' => 'Terverifikasi',
-                            'icon' => 'fa-circle-check'],
+                            'icon' => 'fa-check-circle'],
                             ];
                             $config = $statusConfig[$submission->status] ?? $statusConfig['pending'];
                             @endphp
                             <span
-                                class="px-2 py-1 inline-flex items-center text-[10px] sm:text-xs leading-5 font-semibold rounded-full {{ $config['bg'] }} {{ $config['text'] }}">
-                                <i class="fas {{ $config['icon'] }} mr-1 sm:mr-1.5 text-xs font-medium"></i>
-                                {{-- Hilangkan label di layar kecil, tampilkan di sm: ke atas --}}
-                                <span class="hidden sm:inline">{{ $config['label'] }}</span>
+                                class="px-3 py-1.5 inline-flex items-center text-xs leading-5 font-semibold rounded-full {{ $config['bg'] }} {{ $config['text'] }}">
+                                <i class="fas {{ $config['icon'] }} mr-1.5"></i> {{ $config['label'] }}
                             </span>
                         </td>
-                        {{-- Catatan (Hidden Mobile) --}}
-                        <td class="hidden md:table-cell px-6 py-4">
-                            @if($submission->note)
-                            <div class="text-sm text-gray-600 max-w-xs">
-                                <i class="fas fa-sticky-note text-gray-400 mr-1"></i>
-                                {{ Str::limit($submission->note, 30) }}
-                            </div>
-                            @else
-                            <span class="text-xs text-gray-400 italic">Tidak ada catatan</span>
-                            @endif
-                        </td>
-                        {{-- Aksi --}}
-                        <td class="px-3 md:px-6 py-4 whitespace-nowrap text-center">
-                            <div class="flex items-center justify-center gap-2">
-                                <a href="{{ route('submissions.show', $submission->submission_id) }}"
-                                    class="inline-flex items-center px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-medium rounded-lg transition-colors duration-200 shadow-sm"
-                                    wire:navigate>
-                                    <i class="fas fa-eye md:mr-1.5"></i>
-                                    {{-- Teks Aksi hanya muncul di md: ke atas --}}
-                                    <span class="hidden md:inline">Detail</span>
-                                </a>
-                            </div>
+                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                            <a href="{{ route('submissions.show', $submission->submission_id) }}" wire:navigate
+                                class="inline-flex items-center px-3 py-1.5 bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 hover:text-emerald-600 rounded-lg text-xs font-medium transition-all shadow-sm">
+                                <i class="fas fa-eye mr-1.5"></i> Detail
+                            </a>
                         </td>
                     </tr>
                     @endforeach
@@ -248,23 +212,76 @@ new class extends Component {
             </table>
         </div>
 
-        {{-- Pagination Info --}}
-        @if($submissions->hasPages())
-        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
-            <div class="flex items-center justify-between text-xs md:text-sm">
-                <div class="text-gray-600">
-                    Menampilkan <span class="font-semibold text-gray-800">{{ $submissions->firstItem() }}</span>
-                    sampai <span class="font-semibold text-gray-800">{{ $submissions->lastItem() }}</span>
-                    dari <span class="font-semibold text-gray-800">{{ $submissions->total() }}</span> pengajuan
+        {{-- MOBILE VIEW: CARDS --}}
+        <div class="md:hidden">
+            @foreach($submissions as $submission)
+            <div class="p-4 border-b border-gray-200 last:border-0 hover:bg-gray-50 transition-colors">
+
+                {{-- Row 1: Company & Status Badge --}}
+                <div class="flex justify-between items-start mb-3">
+                    <div class="flex items-center gap-3 max-w-[70%]">
+                        <div
+                            class="flex-shrink-0 w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center text-emerald-600">
+                            <i class="fas fa-building"></i>
+                        </div>
+                        <div>
+                            <div class="text-sm font-bold text-gray-900 line-clamp-1">
+                                {{ $submission->company_name }}
+                            </div>
+                            <div class="text-xs text-gray-500 mt-0.5 flex items-center">
+                                <i class="far fa-calendar-alt mr-1"></i>
+                                {{ $submission->created_at->format('d M Y') }}
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Status Badge Compact --}}
+                    @php
+                    $statusColors = [
+                    'pending' => 'bg-amber-100 text-amber-700',
+                    'approved' => 'bg-emerald-100 text-emerald-700',
+                    'rejected' => 'bg-red-100 text-red-700',
+                    'verified' => 'bg-teal-100 text-teal-700',
+                    ];
+                    $statusIcons = [
+                    'pending' => 'fa-hourglass-start',
+                    'approved' => 'fa-check',
+                    'rejected' => 'fa-times',
+                    'verified' => 'fa-check-double',
+                    ];
+                    $color = $statusColors[$submission->status] ?? 'bg-gray-100 text-gray-700';
+                    $icon = $statusIcons[$submission->status] ?? 'fa-question';
+                    @endphp
+                    <span class="flex-shrink-0 px-2 py-1 rounded-md text-xs font-bold {{ $color }}">
+                        <i class="fas {{ $icon }}"></i>
+                    </span>
+                </div>
+
+                {{-- Row 2: Address --}}
+                <div class="mb-3 pl-[3.25rem]">
+                    <div class="text-xs text-gray-500 flex items-start">
+                        <i class="fas fa-map-marker-alt text-gray-400 mt-0.5 mr-1.5 flex-shrink-0"></i>
+                        <span class="line-clamp-2 leading-relaxed">{{ $submission->address_company }}</span>
+                    </div>
+                </div>
+
+                {{-- Row 3: Action --}}
+                <div class="flex items-center justify-end pt-2 border-t border-dashed border-gray-100 pl-[3.25rem]">
+                    <a href="{{ route('submissions.show', $submission->submission_id) }}" wire:navigate
+                        class="inline-flex items-center text-xs font-medium text-emerald-600 hover:text-emerald-700 transition-colors">
+                        Lihat Detail <i class="fas fa-arrow-right ml-1"></i>
+                    </a>
                 </div>
             </div>
+            @endforeach
+        </div>
+
+        {{-- Pagination --}}
+        @if($submissions->hasPages())
+        <div class="px-4 py-3 sm:px-6 bg-gray-50 border-t border-gray-100">
+            {{ $submissions->links() }}
         </div>
         @endif
-    </div>
-
-    {{-- Pagination Links --}}
-    <div class="mt-6">
-        {{ $submissions->links() }}
     </div>
     @endif
 </div>
