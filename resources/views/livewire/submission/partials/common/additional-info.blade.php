@@ -4,46 +4,6 @@
         Informasi Tambahan
     </h3>
     <div class="space-y-3 text-sm">
-        {{-- Tanggal Mulai --}}
-        @if($submission->start_date)
-        <div class="flex justify-between items-center py-3 border-b border-gray-100">
-            <span class="text-gray-600 flex items-center">
-                <i class="fas fa-calendar-day text-gray-400 mr-2"></i>
-                Tanggal Mulai
-            </span>
-            <span class="text-gray-800 font-medium">
-                {{ \Carbon\Carbon::parse($submission->start_date)->format('d M Y') }}
-            </span>
-        </div>
-        @endif
-
-        {{-- Durasi --}}
-        @if($submission->duration_days)
-        <div class="flex justify-between items-center py-3 border-b border-gray-100">
-            <span class="text-gray-600 flex items-center">
-                <i class="fas fa-hourglass-half text-gray-400 mr-2"></i>
-                Durasi Penelitian
-            </span>
-            <span class="text-gray-800 font-medium">
-                {{ $submission->duration_days }} hari
-            </span>
-        </div>
-        @endif
-
-        {{-- Tanggal Berakhir --}}
-        @if($submission->start_date && $submission->duration_days)
-        <div class="flex justify-between items-center py-3 border-b border-gray-100">
-            <span class="text-gray-600 flex items-center">
-                <i class="fas fa-calendar-check text-gray-400 mr-2"></i>
-                Tanggal Berakhir
-            </span>
-            <span class="text-gray-800 font-medium">
-                {{ \Carbon\Carbon::parse($submission->start_date)->addDays($submission->duration_days)->format('d M Y')
-                }}
-            </span>
-        </div>
-        @endif
-
         {{-- Tanggal Pengajuan --}}
         <div class="flex justify-between items-center py-3 border-b border-gray-100">
             <span class="text-gray-600 flex items-center">

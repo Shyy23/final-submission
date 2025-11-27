@@ -115,10 +115,5 @@ new #[Layout('layouts.guest')] class extends Component
             </form>
         </div>
 
-        <!-- Footer Text -->
-        <p class="text-center text-xs text-gray-500">
-            © {{ date('Y') }} Submission System - Tugas Akhir Mahasiswa
-        </p>
-
     </div>
 </div>

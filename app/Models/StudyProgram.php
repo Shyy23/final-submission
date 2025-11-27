@@ -8,6 +8,6 @@ class StudyProgram extends Model
 {
     protected $table = 'study_programs';
     protected $primaryKey = 'study_id';
-    protected $fillable = ['study_name'];
+    protected $fillable = ['study_name', 'study_code'];
     public $timestamps = true;
 }

@@ -23,6 +23,7 @@
     <div class="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50">
         {{ $slot }}
     </div>
+    <x-footer />
 </body>
 
 

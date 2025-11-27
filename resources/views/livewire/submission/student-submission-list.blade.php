@@ -73,6 +73,22 @@ new class extends Component {
         </div>
     </div>
 
+    @if (session()->has('success'))
+    <div
+        class="bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-lg mb-6 flex items-start shadow-sm animate-fade-in-down">
+        <i class="fas fa-circle-check text-emerald-500 mr-3 mt-0.5 flex-shrink-0"></i>
+        <span>{{ session('success') }}</span>
+    </div>
+    @endif
+
+    @if (session()->has('error'))
+    <div
+        class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-start shadow-sm animate-fade-in-down">
+        <i class="fas fa-exclamation-circle text-red-500 mr-3 mt-0.5 flex-shrink-0"></i>
+        <span>{{ session('error') }}</span>
+    </div>
+    @endif
+
     {{-- Filter & Search --}}
     <div class="bg-white rounded-xl shadow-sm p-4 mb-6 border border-gray-100">
         <div class="flex flex-col md:flex-row md:items-center gap-3">

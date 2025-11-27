@@ -101,10 +101,18 @@ new #[Layout('layouts.guest')] class extends Component
 
                 <!-- Login Button -->
                 <div>
-                    <button type="submit"
-                        class="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-lg shadow-md transition-all duration-300 transform hover:scale-[1.02]">
-                        <i class="fas fa-sign-in-alt mr-2"></i>
-                        Masuk
+                    <button type="submit" wire:loading.attr="disabled" wire:target="login"
+                        class="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-lg shadow-md transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed">
+
+                        <!-- Tampil saat TIDAK loading -->
+                        <span wire:loading.remove wire:target="login">
+                            <i class="fas fa-sign-in-alt mr-2"></i> Masuk
+                        </span>
+
+                        <!-- Tampil SAAT loading -->
+                        <span wire:loading wire:target="login">
+                            <i class="fas fa-circle-notch fa-spin mr-2"></i> Memproses...
+                        </span>
                     </button>
                 </div>
 
@@ -124,11 +132,6 @@ new #[Layout('layouts.guest')] class extends Component
 
             </form>
         </div>
-
-        <!-- Footer Text -->
-        <p class="text-center text-xs text-gray-500">
-            © {{ date('Y') }} Submission System - Tugas Akhir Mahasiswa
-        </p>
 
     </div>
 </div>

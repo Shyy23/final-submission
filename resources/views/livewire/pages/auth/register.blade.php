@@ -42,23 +42,37 @@ new #[Layout('layouts.guest')] class extends Component
      */
     public function register(): void
     {
-        // UBAH: Validasi
+        // Validasi
         $validated = $this->validate([
             'name' => ['required', 'string', 'max:255'],
             'email' => [
                 'required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class,
-                'regex:/^[a-zA-Z0-9._%+-]+@unjani\.ac\.id$/i' // Validasi email unjani
+                'regex:/^[a-zA-Z0-9._%+-]+@unjani\.ac\.id$/i'
             ],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
-            
-            // TAMBAHKAN: Validasi baru
-            'nim' => ['required', 'string', 'max:11', 'unique:' . Student::class], // Cek ke tabel students
-            'study_id' => ['required', 'integer', 'exists:study_programs,study_id'], // Cek ke tabel study_programs
-            'ktm' => ['required', 'image', 'max:2048'], // Validasi file KTM (maks 2MB)
+
+            'nim' => [
+                'required', 
+                'string', 
+                'size:10', 
+                'unique:' . Student::class, 
+                // Regex Penjelasan:
+                // ^[A-H]       : Digit 1 harus Huruf A sampai H (Fakultas)
+                // [0-9]        : Digit 2 Angka (Prodi)
+                // [1-2]        : Digit 3 Angka 1 atau 2 (Lokasi)
+                // [1-2]        : Digit 4 Angka 1 atau 2 (Jalur)
+                // [0-2]        : Digit 5 Angka 0, 1, atau 2 (Semester)
+                // \d{5}$       : 5 Digit terakhir adalah angka (Tahun & No Urut)
+                'regex:/^[A-H][0-9][1-2][1-2][0-2]\d{5}$/' 
+            ],
+
+            'study_id' => ['required', 'integer', 'exists:study_programs,study_id'],
+            'ktm' => ['required', 'image', 'max:2048'],
         ], [
-            // TAMBAHKAN: Pesan error kustom
             'email.regex' => 'Pendaftaran hanya diizinkan untuk email mahasiswa (@unjani.ac.id).',
             'nim.unique' => 'NIM ini sudah terdaftar.',
+            'nim.size' => 'NIM harus berjumlah tepat 10 karakter.',
+            'nim.regex' => 'Format NIM tidak sesuai standar UNJANI (Cth: A311119003). Periksa kembali digit Fakultas, Lokasi, atau Jalur.',
             'study_id.required' => 'Program Studi wajib dipilih.',
             'ktm.required' => 'Harap upload scan KTM Anda.',
         ]);
@@ -89,7 +103,6 @@ new #[Layout('layouts.guest')] class extends Component
             event(new Registered($user));
         });
 
-        // HAPUS: Auth::login($user);
 
         // UBAH: Redirect ke login dengan pesan sukses
         session()->flash('status', 'Pendaftaran berhasil! Silakan verifikasi email Anda. Akun Anda akan aktif setelah diverifikasi oleh Admin.');
@@ -195,7 +208,7 @@ new #[Layout('layouts.guest')] class extends Component
                         </div>
                         <x-text-input wire:model="nim" id="nim"
                             class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                            type="text" placeholder="Masukkan NIM" required autocomplete="off" />
+                            type="text" placeholder="Masukkan NIM (Cth: A311119003)" required autocomplete="off" />
                     </div>
                     <x-input-error :messages="$errors->get('nim')" class="mt-2" />
                 </div>
@@ -211,7 +224,7 @@ new #[Layout('layouts.guest')] class extends Component
                         <select wire:model="study_id" id="study_id" name="study_id"
                             class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 bg-white"
                             required>
-                            <option value="" disabled>Pilih program studi...</option>
+                            <option value="">Pilih program studi...</option>
                             @foreach($prodiOptions as $prodi)
                             <option value="{{ $prodi->study_id }}">{{ $prodi->study_name }}</option>
                             @endforeach
@@ -271,7 +284,7 @@ new #[Layout('layouts.guest')] class extends Component
                             <i class="fas fa-id-card text-gray-400"></i>
                         </div>
                         <input wire:model="ktm" id="ktm"
-                            class="block w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 cursor-pointer bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
+                            class="block w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm text-gray-900 cursor-pointer bg-gray-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 file:cursor-pointer file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100"
                             type="file" required />
                     </div>
                     <div wire:loading wire:target="ktm" class="mt-2 text-sm text-emerald-600">
@@ -319,7 +332,5 @@ new #[Layout('layouts.guest')] class extends Component
     </div> <!-- Akhir dari Card Wrapper Utama -->
 
     <!-- Footer Text (Diposisikan di luar card) -->
-    <p class="text-center text-xs text-gray-500 absolute bottom-6 left-0 right-0">
-        © {{ date('Y') }} Submission System - Tugas Akhir Mahasiswa
-    </p>
+
 </div>

@@ -10,12 +10,10 @@ class Submission extends Model
 {
     protected $table = 'submissions';
     protected $primaryKey = 'submission_id';
-    protected $appends = ['end_date'];
-    protected $fillable = ['representative_nim', 'admin_id', 'leader_id', 'company_name', 'address_company', 'note', 'status', 'document_path','sent_to_leader', 'qr_url', 'feedback', 'start_date', 'duration_days'];
+    protected $fillable = ['representative_nim', 'admin_id', 'leader_id', 'company_name', 'address_company', 'note', 'status', 'document_path','sent_to_leader', 'qr_url', 'feedback', 'department_name', 'department_code'];
     public $timestamps = true;
 
     protected $casts = [
-        'start_date' => 'date',
         'sent_to_leader' => 'boolean',
     ];
     protected static function boot()
@@ -57,25 +55,4 @@ class Submission extends Model
     {
         return $this->belongsTo(Leader::class, 'leader_id', 'nid');
     }
-
-
-    public function getEndDateAttribute()
-    {
-        if (!$this->start_date || !$this->duration_days) {
-            return null;
-        }
-
-        return Carbon::parse($this->start_date)
-                    ->addDays($this->duration_days)
-                    ->format('Y-m-d');
-    }
-
-// Untuk keperluan query (scope)
-    public function scopeActive($query)
-    {
-        return $query->where('status', 'verified')
-                     ->where('start_date', '<=', now())
-                     ->where('end_date', '>=', now());
-    }
-
 }

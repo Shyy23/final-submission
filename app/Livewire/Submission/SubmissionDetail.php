@@ -33,12 +33,16 @@ class SubmissionDetail extends Component
         ])->findOrFail($this->submissionId);
     }
 
+  
     /**
-     * GENERATE PDF (Dipanggil oleh Child Components)
+     * GENERATE PDF
      */
     #[On('generateAndSavePdf')] 
     public function generateAndSavePdf($withQr = false)
     {
+        // CRITICAL: Refresh data submission agar mendapatkan update terbaru dari Admin Action
+        $this->loadSubmission();
+
         Carbon::setLocale('id');
         $dateIndo = Carbon::now()->translatedFormat('d F Y');
         
@@ -48,13 +52,13 @@ class SubmissionDetail extends Component
         // Gabungkan ketua dan anggota
         $fixedStudents = collect([$representative])->merge($members)->unique('nim')->values();
 
+        // Data yang dikirim ke View PDF
         $data = [
             'submission' => $this->submission,
             'students'   => $fixedStudents,
             'withQr'     => $withQr,
             'qrPath'     => ($withQr && $this->submission->qr_url) ? public_path('qr-code/' . $this->submission->qr_url) : null,
             'date'       => $dateIndo,
-            'nomor_surat'=> 'B/'.$this->submission->submission_id.'/FSI-Unjani/'. \Carbon\Carbon::now()->format('m/Y'),
             'logo_ykep'  => public_path('assets/img/ykep.png'),
             'logo_unjani' => public_path('assets/img/unjani.png'), 
         ];
@@ -69,9 +73,10 @@ class SubmissionDetail extends Component
         $pdf = Pdf::loadView('pdf.surat_tugas', $data)->setPaper('a4', 'portrait');
         Storage::put($storagePath, $pdf->output());
         
+        // Update path dokumen tanpa refresh ulang (karena sudah di-load di awal)
         $this->submission->update(['document_path' => $storagePath]);
-        $this->submission->refresh();
     }
+
 
     /**
      * DOWNLOAD DOCUMENT

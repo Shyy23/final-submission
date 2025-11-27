@@ -1,38 +1,84 @@
+@php
+// Helper Romawi
+if (!function_exists('getRomanMonth')) {
+function getRomanMonth($month) {
+$map = [
+1 => 'I', 2 => 'II', 3 => 'III', 4 => 'IV', 5 => 'V', 6 => 'VI',
+7 => 'VII', 8 => 'VIII', 9 => 'IX', 10 => 'X', 11 => 'XI', 12 => 'XII'
+];
+return $map[intval($month)] ?? 'I';
+}
+}
+
+// 1. Ambil Nama Prodi
+$mainProdiName = $submission->department_name
+?? ($submission->representative->studyProgram->study_name ?? 'Kimia');
+
+// 2. Ambil Kode Prodi
+$prodiCode = $submission->department_code ?? 'XX';
+
+// 3. Logika Tembusan
+$additionalProdis = collect();
+if ($submission->memberStudents) {
+foreach($submission->memberStudents as $member) {
+$memProdi = $member->studyProgram->study_name ?? '';
+if ($memProdi && $memProdi !== $mainProdiName) {
+$additionalProdis->push($memProdi);
+}
+}
+}
+$uniqueAdditionalProdis = $additionalProdis->unique()->values();
+
+$currentMonth = date('n');
+$currentYear = date('Y');
+@endphp
+
 <!DOCTYPE html>
 <html>
 
 <head>
     <title>Surat Permohonan Izin Tempat Penelitian</title>
     <style>
+        /* MARGIN HALAMAN UTAMA */
         @page {
-            margin: 1cm 2cm;
+            margin: 0.36cm 0.5cm 0.48cm 0.76cm;
         }
 
         body {
             font-family: 'Times New Roman', Times, serif;
-            font-size: 12pt;
+            font-size: 11pt;
             line-height: 1.15;
+            color: #000;
         }
 
-        /* HEADER & KONTEN LAINNYA (TETAP) */
+        /* HEADER / KOP SURAT (FULL WIDTH - Tidak kena padding body) */
         .header-table {
             width: 100%;
-            border-bottom: 4px double black;
-            padding-bottom: 4px;
-            margin-bottom: 20px;
+            border-bottom: 3px double black;
+            padding-bottom: 5px;
+            margin-bottom: 15px;
         }
 
         .header-text {
             text-align: center;
-            vertical-align: middle;
         }
 
-        .font-header-main {
-            font-size: 15pt;
+        .font-yayasan {
+            font-size: 16pt;
             font-weight: bold;
             text-transform: uppercase;
-            line-height: 1.2;
-            letter-spacing: 0.5px;
+        }
+
+        .font-univ {
+            font-size: 16pt;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .font-fakultas {
+            font-size: 16pt;
+            font-weight: bold;
+            text-transform: uppercase;
         }
 
         .font-alamat {
@@ -41,32 +87,89 @@
             margin-top: 2px;
         }
 
-        .meta-table {
-            width: 100%;
-            margin-bottom: 15px;
+        /* CONTAINER BODY (Seluruh isi surat selain Kop) */
+        /* Padding Kiri 2cm, Kanan 2cm */
+        .body-container {
+            padding-left: 2cm;
+            padding-right: 2cm;
         }
 
-        .meta-col-label {
+        /* LAYOUT META & RECIPIENT */
+        .top-section-table {
+            width: 100%;
+            margin-bottom: 15px;
+            border-collapse: collapse;
+        }
+
+        .top-section-table td {
+            vertical-align: top;
+        }
+
+        /* META DATA (KIRI) */
+        .meta-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .meta-label {
             width: 80px;
             vertical-align: top;
         }
 
-        .meta-col-sep {
+        .meta-sep {
             width: 10px;
+            vertical-align: top;
+            text-align: center;
+        }
+
+        .meta-val {
             vertical-align: top;
         }
 
-        .student-table {
+        /* CONTENT UTAMA */
+        .content-block {
+            text-align: justify;
+            margin-bottom: 5px;
+        }
+
+        /* WRAPPER POIN (INDENTASI LEBIH DALAM) */
+        .poin-wrapper {
+            margin-left: 1.0cm;
+            /* Indentasi tambahan agar lebih kanan dari "Dengan hormat" */
+        }
+
+        /* TABEL POIN 1, 2, 3 */
+        .poin-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 10px 0;
+            margin-bottom: 5px;
+        }
+
+        .poin-num {
+            width: 25px;
+            vertical-align: top;
+        }
+
+        .poin-content {
+            text-align: justify;
+            vertical-align: top;
+        }
+
+        /* TABEL MAHASISWA */
+        .student-table {
+            width: 95%;
+            margin-left: 25px;
+            border-collapse: collapse;
+            margin-top: 5px;
+            margin-bottom: 10px;
         }
 
         .student-table th,
         .student-table td {
             border: 1px solid black;
-            padding: 4px 8px;
+            padding: 3px 6px;
             text-align: left;
+            font-size: 11pt;
         }
 
         .student-table th {
@@ -74,215 +177,290 @@
             font-weight: bold;
         }
 
-        .content-text {
-            text-align: justify;
-            margin-bottom: 10px;
-        }
-
-        /* --- PERBAIKAN UTAMA DI SINI --- */
-        /* FOOTER MENGGUNAKAN TABLE UNTUK STABILITAS */
-        .footer-table {
+        /* FOOTER LAYOUT */
+        .footer-container {
             width: 100%;
-            margin-top: 20px;
-            border: none;
+            margin-top: 30px;
+            display: table;
+            /* Pengganti clearfix modern */
         }
 
-        .col-tembusan {
-            width: 40%;
-            vertical-align: top;
+        /* KOLOM KIRI: TEMBUSAN */
+        .footer-left {
+            float: left;
+            width: 45%;
             font-size: 10pt;
+            vertical-align: bottom;
+            /* UPDATE: Margin top diperbesar lagi agar turun lebih jauh */
+            margin-top: 100px;
         }
 
-        .col-signature {
-            width: 60%;
-            /* Sisa lebar untuk tanda tangan */
-            vertical-align: top;
-            padding-left: 50px;
-            /* Geser blok tanda tangan agak ke kanan */
+        /* KOLOM KANAN: TTD & QR */
+        .footer-right {
+            float: right;
+            width: 45%;
+            text-align: left;
+            padding-left: 20px;
         }
 
-        /* Styling Elemen Tanda Tangan */
-        .tt-elektronik-wrapper {
-            margin: 10px 0;
-            display: block;
+        /* SECTION TANDA TANGAN */
+        .ttd-section {
+            margin-bottom: 20px;
         }
 
-        .tt-elektronik-icon {
-            width: 20px;
-            height: auto;
-            vertical-align: middle;
-            margin-right: 8px;
-            /* Jarak antara Logo dan Teks */
+        /* SECTION QR (Di bawah TTD, Align Right) */
+        .qr-section {
+            text-align: right;
+            /* Geser konten ke kanan */
+            /* UPDATE: Tambah jarak dari TTD */
+            margin-top: 40px;
         }
 
-        .tt-elektronik-text {
+        /* Tabel QR Inner */
+        .qr-table-inner {
+            margin-left: auto;
+            /* Push table to the right */
+            margin-right: 0;
+            width: auto;
+        }
+
+        .tt-electronic-text {
             font-weight: bold;
-            color: #333;
-            font-size: 11pt;
+            font-size: 9pt;
             vertical-align: middle;
-        }
-
-        /* QR Code Styling di dalam Tabel */
-        .qr-table {
-            margin-top: 15px;
-            width: 100%;
-        }
-
-        .qr-img {
-            width: 85px;
-            height: 85px;
         }
 
         .qr-text {
-            font-size: 8pt;
-            color: #333;
-            line-height: 1.2;
-            padding-left: 10px;
-            vertical-align: middle;
+            font-size: 6pt;
+            line-height: 1.1;
+            text-align: left;
+        }
+
+        /* Clearfix */
+        .clearfix::after {
+            content: "";
+            clear: both;
+            display: table;
         }
     </style>
 </head>
 
 <body>
 
-    {{-- ... (HEADER, TANGGAL, META DATA, KONTEN SURAT SAMA SEPERTI SEBELUMNYA) ... --}}
-
-    {{-- HEADER --}}
+    {{-- KOP SURAT (FULL WIDTH) --}}
     <table class="header-table">
         <tr>
-            <td width="15%" align="center"><img src="{{ $logo_ykep }}" width="100"></td>
+            <td width="15%" align="center" style="vertical-align: middle;">
+                <img src="{{ $logo_ykep }}" width="100">
+            </td>
             <td width="70%" class="header-text">
-                <div class="font-header-main">YAYASAN KARTIKA EKA PAKSI</div>
-                <div class="font-header-main">UNIVERSITAS JENDERAL ACHMAD YANI (UNJANI)</div>
-                <div class="font-header-main">FAKULTAS SAINS DAN INFORMATIKA (FSI)</div>
-                <div class="font-alamat">Kampus Cimahi: Jl. Terusan Jenderal Sudirman PO.BOX 148 Telp. (022) 6650646
+                <div class="font-yayasan">YAYASAN KARTIKA EKA PAKSI</div>
+                <div class="font-univ">UNIVERSITAS JENDERAL ACHMAD YANI (UNJANI)</div>
+                <div class="font-fakultas">FAKULTAS SAINS DAN INFORMATIKA (FSI)</div>
+                <div class="font-alamat">
+                    Kampus Cimahi: Jl. Terusan Jenderal Sudirman PO.BOX 148 Telp. (022) 6650646
                 </div>
             </td>
-            <td width="15%" align="center"><img src="{{ $logo_unjani }}" width="100"></td>
+            <td width="15%" align="center" style="vertical-align: middle;">
+                <img src="{{ $logo_unjani }}" width="100">
+            </td>
         </tr>
     </table>
 
-    <div style="text-align: right; margin-bottom: 5px;">Cimahi, {{ $date }}</div>
+    {{-- WRAPPER UNTUK SELURUH ISI SURAT --}}
+    <div class="body-container">
 
-    <table class="meta-table">
-        <tr>
-            <td class="meta-col-label">Nomor</td>
-            <td class="meta-col-sep">:</td>
-            <td>B/{{ $submission->submission_id }}/FSI-Unjani/{{ \Carbon\Carbon::now()->format('m/Y') }}</td>
-        </tr>
-        <tr>
-            <td class="meta-col-label">Sifat</td>
-            <td class="meta-col-sep">:</td>
-            <td>Biasa</td>
-        </tr>
-        <tr>
-            <td class="meta-col-label">Lampiran</td>
-            <td class="meta-col-sep">:</td>
-            <td>-</td>
-        </tr>
-        <tr>
-            <td class="meta-col-label">Perihal</td>
-            <td class="meta-col-sep">:</td>
-            <td><strong>Permohonan Izin Tempat Penelitian</strong></td>
-        </tr>
-    </table>
+        {{-- TANGGAL (Di Kanan Atas Body) --}}
+        <div style="text-align: right; margin-bottom: 5px;">
+            Cimahi, {{ \Carbon\Carbon::parse($submission->created_at)->translatedFormat('d F Y') }}
+        </div>
 
-    <div style="margin-bottom: 20px;">
-        Kepada Yth:<br><strong>Kepala/Pimpinan {{ $submission->company_name }}</strong><br>
-        @if($submission->address_company) {{ $submission->address_company }}<br> @else di Tempat @endif
-    </div>
-
-    <div class="content-text">Dengan hormat,</div>
-    <div class="content-text">
-        1. Dasar: Nota Dinas Ketua Program Studi Kimia Nomor: ND/{{ $submission->submission_id }}/KI-FSI/{{
-        \Carbon\Carbon::now()->format('m/Y') }}
-        tanggal {{ \Carbon\Carbon::parse($submission->created_at)->translatedFormat('d F Y') }}
-        perihal Permohonan Surat Pengantar Penelitian Tugas Akhir.
-    </div>
-    <div class="content-text">2. Atas dasar tersebut di atas, kami sampaikan mahasiswa Program Studi Kimia:</div>
-
-    <table class="student-table">
-        <thead>
+        {{-- SECTION ATAS: META DATA & KEPADA YTH --}}
+        <table class="top-section-table">
             <tr>
-                <th width="10%">No.</th>
-                <th width="60%">Nama</th>
-                <th width="30%">NIM</th>
+                {{-- KOLOM KIRI: Nomor, Sifat, dll --}}
+                <td width="55%">
+                    <table class="meta-table">
+                        <tr>
+                            <td class="meta-label">Nomor</td>
+                            <td class="meta-sep">:</td>
+                            <td class="meta-val">
+                                B/{{ $submission->submission_id }}/FSI-Unjani/{{ getRomanMonth($currentMonth) }}/{{
+                                $currentYear }}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="meta-label">Sifat</td>
+                            <td class="meta-sep">:</td>
+                            <td class="meta-val">Biasa</td>
+                        </tr>
+                        <tr>
+                            <td class="meta-label">Lampiran</td>
+                            <td class="meta-sep">:</td>
+                            <td class="meta-val">-</td>
+                        </tr>
+                        <tr>
+                            <td class="meta-label">Perihal</td>
+                            <td class="meta-sep">:</td>
+                            <td class="meta-val"><strong>Permohonan Izin Tempat Penelitian</strong></td>
+                        </tr>
+                    </table>
+                </td>
+
+                {{-- KOLOM KANAN: Kepada Yth --}}
+                <td width="45%" style="padding-left: 10px;">
+                    Kepada Yth:<br>
+                    <strong>Kepala/Pimpinan {{ $submission->company_name }}</strong><br>
+                    @if($submission->address_company)
+                    {!! nl2br(e($submission->address_company)) !!}
+                    @else
+                    di Tempat
+                    @endif
+                </td>
             </tr>
-        </thead>
-        <tbody>
-            @foreach($students as $index => $student)
-            <tr>
-                <td align="center">{{ $index + 1 }}</td>
-                <td>{{ $student->user->name ?? $student->name }}</td>
-                <td align="center">{{ $student->nim }}</td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
+        </table>
 
-    <div class="content-text">
-        Saat ini yang bersangkutan sedang melaksanakan Penelitian Tugas Akhir, untuk terlaksananya kegiatan tersebut,
-        dengan ini kami mengajukan Permohonan Izin Tempat Penelitian di <strong>{{ $submission->company_name
-            }}</strong>.
-    </div>
-    <div class="content-text">Kami mohon Bapak/Ibu berkenan memberikan izin untuk maksud tersebut di atas.</div>
-    <div class="content-text">3. Demikian surat permohonan ini kami sampaikan, atas perhatian dan kerjasamanya diucapkan
-        terima kasih.</div>
-    {{-- ... (AKHIR KONTEN SURAT) ... --}}
+        <div class="content-block" style="margin-top: 10px;">Dengan hormat,</div>
 
+        {{-- WRAPPER ISI SURAT (INDENTASI LEBIH DALAM) --}}
+        <div class="poin-wrapper">
+            {{-- POIN 1 --}}
+            <table class="poin-table">
+                <tr>
+                    <td class="poin-num">1.</td>
+                    <td class="poin-content">
+                        Dasar: Nota Dinas Ketua Program Studi {{ $mainProdiName }} Nomor:
+                        ND/{{ $submission->submission_id }}/{{ $prodiCode }}-FSI/{{ getRomanMonth($currentMonth) }}/{{
+                        $currentYear }}
+                        tanggal {{ \Carbon\Carbon::parse($submission->created_at)->translatedFormat('d F Y') }}
+                        perihal Permohonan Surat Pengantar Penelitian Tugas Akhir.
+                    </td>
+                </tr>
+            </table>
 
-    {{-- FOOTER MENGGUNAKAN TABEL (Fix Layout) --}}
-    <table class="footer-table">
-        <tr>
-            {{-- KOLOM KIRI: TEMBUSAN --}}
-            <td class="col-tembusan">
+            {{-- POIN 2 --}}
+            <table class="poin-table">
+                <tr>
+                    <td class="poin-num">2.</td>
+                    <td class="poin-content">
+                        Atas dasar tersebut di atas, kami sampaikan mahasiswa Program Studi {{ $mainProdiName }}:
+                    </td>
+                </tr>
+            </table>
+
+            {{-- TABEL SISWA --}}
+            <table class="student-table">
+                <thead>
+                    <tr>
+                        <th width="10%">No.</th>
+                        <th width="50%">Nama</th>
+                        <th width="40%">NIM</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($students as $index => $student)
+                    <tr>
+                        <td align="center">{{ $index + 1 }}</td>
+                        <td>{{ $student->user->name ?? $student->name }}</td>
+                        <td align="center">{{ $student->nim }}</td>
+                    </tr>
+                    @endforeach
+                </tbody>
+            </table>
+
+            {{-- PARAGRAF PENUTUP POIN 2 --}}
+            <table class="poin-table">
+                <tr>
+                    <td class="poin-num"></td>
+                    <td class="poin-content">
+                        Saat ini yang bersangkutan sedang melaksanakan Penelitian Tugas Akhir, untuk terlaksananya
+                        kegiatan tersebut,
+                        dengan ini kami mengajukan Permohonan Izin Tempat Penelitian di <strong>{{
+                            $submission->company_name }}</strong>.
+                        Kami mohon Bapak/Ibu berkenan memberikan izin untuk maksud tersebut di atas.
+                    </td>
+                </tr>
+            </table>
+
+            {{-- POIN 3 --}}
+            <table class="poin-table">
+                <tr>
+                    <td class="poin-num">3.</td>
+                    <td class="poin-content">
+                        Demikian surat permohonan ini kami sampaikan, atas perhatian dan kerjasamanya diucapkan terima
+                        kasih.
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        {{-- FOOTER AREA --}}
+        <div class="footer-container clearfix">
+
+            {{-- BAGIAN KIRI: TEMBUSAN --}}
+            <div class="footer-left">
                 Tembusan Yth:<br>
                 1. Dekan FSI Unjani (sebagai laporan)<br>
-                2. Ketua Program Studi Kimia FSI Unjani
-            </td>
+                2. Ketua Program Studi {{ $mainProdiName }} FSI Unjani<br>
+                @foreach($uniqueAdditionalProdis as $idx => $otherProdi)
+                {{ $idx + 3 }}. Ketua Program Studi {{ $otherProdi }} FSI Unjani<br>
+                @endforeach
+            </div>
 
-            {{-- KOLOM KANAN: TANDA TANGAN --}}
-            <td class="col-signature">
-                a.n. Dekan<br>
-                Wakil Dekan I,<br>
+            {{-- BAGIAN KANAN: TANDA TANGAN & QR --}}
+            <div class="footer-right">
 
-                {{-- LOGIK TAMPILAN TT ELEKTRONIK --}}
-                @if($withQr && $qrPath)
-                <div class="tt-elektronik-wrapper">
-                    <img src="{{ $logo_unjani }}" class="tt-elektronik-icon">
-                    <span class="tt-elektronik-text">TT ELEKTRONIK</span>
+                {{-- 1. TANDA TANGAN --}}
+                <div class="ttd-section">
+                    a.n. Dekan<br>
+                    Wakil Dekan I,<br>
+
+                    @if($withQr && $qrPath)
+                    <div style="margin: 10px 0;">
+                        <table style="border:none;">
+                            <tr>
+                                <td style="border:none; padding-right: 5px;"><img src="{{ $logo_unjani }}" width="20">
+                                </td>
+                                <td style="border:none;" class="tt-electronic-text">TT ELEKTRONIK</td>
+                            </tr>
+                        </table>
+                    </div>
+                    @else
+                    <div style="height: 60px; color: #ccc; font-style: italic; display: flex; align-items: center;">
+                        <br><br>(Draft Dokumen)
+                    </div>
+                    @endif
+
+                    <div>
+                        <span style="text-decoration: underline;">Dr. Arie Hardian, S.Si., M.Si.</span><br>
+                        NID. 412185787
+                    </div>
                 </div>
-                @else
-                <br><br>
-                <div style="color: #ccc; font-style: italic;">(Draft Dokumen)</div>
-                <br>
+
+                {{-- 2. QR CODE (DI BAWAH TTD, GESER KANAN) --}}
+                @if($withQr && $qrPath)
+                <div class="qr-section">
+                    <table class="qr-table-inner" style="border:none;">
+                        <tr>
+                            <td width="60" style="border:none; vertical-align:top; padding:0;">
+                                <img src="{{ $qrPath }}" width="60" height="60">
+                            </td>
+                            <td style="border:none; vertical-align:middle; padding-left:5px;" class="qr-text">
+                                Dokumen ini telah<br>
+                                ditandatangani dan<br>
+                                diverifikasi secara digital oleh<br>
+                                <strong>FSI UNJANI</strong>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
                 @endif
 
-                {{-- NAMA DAN NID (TIDAK AKAN HILANG KARENA DALAM TABEL) --}}
-                <div style="margin-top: 2px;">
-                    <span style="text-decoration: underline; font-weight: bold;">Dr. Arie Hardian, S.Si.,
-                        M.Si.</span><br>
-                    NID. 412185787
-                </div>
+            </div>
 
-                {{-- QR CODE DI BAWAH NAMA (MASIH DI KOLOM KANAN) --}}
-                @if($withQr && $qrPath)
-                <table class="qr-table">
-                    <tr>
-                        <td width="90" valign="top">
-                            <img src="{{ $qrPath }}" class="qr-img">
-                        </td>
-                        <td valign="middle" class="qr-text">
-                            Dokumen ini telah ditandatangani dan<br>
-                            diverifikasi secara digital oleh<br>
-                            <strong>FSI UNJANI</strong>
-                        </td>
-                    </tr>
-                </table>
-                @endif
-            </td>
-        </tr>
-    </table>
+        </div>
+
+    </div>
 
 </body>
 

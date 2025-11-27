@@ -5,7 +5,7 @@
     --}}
     @if($submission->status === 'rejected')
 
-    {{-- Header Alert Revisi --}}
+    {{-- Header Alert --}}
     <div class="bg-red-50 border border-red-200 rounded-xl p-6 mb-8 animate-fade-in-down">
         <div class="flex items-start">
             <div class="flex-shrink-0">
@@ -74,51 +74,7 @@
             </div>
         </div>
 
-        {{-- BAGIAN 2: JADWAL PENELITIAN --}}
-        {{-- FIX: Hapus overflow-hidden --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200">
-            {{-- FIX: Tambah rounded-t-xl --}}
-            <div
-                class="bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-4 border-b border-emerald-600 rounded-t-xl">
-                <h3 class="text-lg font-semibold text-white flex items-center">
-                    <i class="fas fa-flask mr-2"></i> Edit Jadwal Penelitian
-                </h3>
-            </div>
-            <div class="p-6 space-y-5">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Mulai <span
-                                class="text-red-500">*</span></label>
-                        <input type="date" wire:model.live="start_date"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 transition duration-200">
-                        @error('start_date') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
-                        @enderror
-                    </div>
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Durasi (Hari) <span
-                                class="text-red-500">*</span></label>
-                        <input type="number" wire:model.live="duration_days" min="1" max="365"
-                            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 transition duration-200">
-                        @error('duration_days') <span class="text-red-500 text-sm mt-1 block">{{ $message }}</span>
-                        @enderror
-                    </div>
-                </div>
-
-                {{-- Preview Tanggal Selesai --}}
-                @if($endDate)
-                <div class="bg-purple-50 border border-purple-100 p-4 rounded-lg flex items-start">
-                    <i class="fas fa-calendar-check text-purple-500 mt-1 mr-3"></i>
-                    <div>
-                        <p class="text-sm text-purple-800 font-semibold">Estimasi Selesai:</p>
-                        <p class="text-lg font-bold text-purple-900">{{ $endDate }}</p>
-                    </div>
-                </div>
-                @endif
-            </div>
-        </div>
-
-        {{-- BAGIAN 3: ANGGOTA KELOMPOK --}}
-        {{-- FIX: Hapus overflow-hidden AGAR DROPDOWN TIDAK TERPOTONG --}}
+        {{-- BAGIAN 2: ANGGOTA KELOMPOK --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200">
             {{-- FIX: Tambah rounded-t-xl --}}
             <div

@@ -18,9 +18,6 @@ class ActionPanel extends Component
     public $company_name;
     public $address_company;
     public $note;
-    public $start_date;
-    public $duration_days;
-    public $endDate;
 
     // Team Member Logic
     public $searchMember = '';
@@ -36,10 +33,7 @@ class ActionPanel extends Component
             $this->company_name = $this->submission->company_name;
             $this->address_company = $this->submission->address_company;
             $this->note = $this->submission->note;
-            $this->start_date = $this->submission->start_date ? $this->submission->start_date->format('Y-m-d') : '';
-            $this->duration_days = $this->submission->duration_days;
             
-            $this->calculateEndDate();
             $this->loadExistingMembers();
         }
     }
@@ -48,29 +42,13 @@ class ActionPanel extends Component
     {
         $members = $this->submission->memberStudents;
         foreach($members as $member) {
-            // Jangan masukkan ketua (diri sendiri) ke list yang bisa dihapus
+            // Ketua tidak masuk dalam list anggota yang dapat dihapus
             if($member->nim !== $this->submission->representative_nim) {
                 $this->selectedMembers[] = [
                     'nim' => $member->nim,
                     'name' => $member->user->name,
                     'study_program' => $member->studyProgram->study_name ?? '-',
                 ];
-            }
-        }
-    }
-
-    public function updatedStartDate() { $this->calculateEndDate(); }
-    public function updatedDurationDays() { $this->calculateEndDate(); }
-
-    public function calculateEndDate()
-    {
-        if ($this->start_date && $this->duration_days) {
-            try {
-                $this->endDate = Carbon::parse($this->start_date)
-                    ->addDays((int)$this->duration_days)
-                    ->translatedFormat('d F Y');
-            } catch (\Exception $e) {
-                $this->endDate = null;
             }
         }
     }
@@ -117,7 +95,7 @@ class ActionPanel extends Component
             return;
         }
 
-        // Kita perlu ambil prodi lagi agar tampilan konsisten
+        // ambil prodi untuk tampilan konsisten
         $student = Student::with('studyProgram')->where('nim', $nim)->first();
 
         $this->selectedMembers[] = [
@@ -141,8 +119,7 @@ class ActionPanel extends Component
         $this->validate([
             'company_name' => 'required|string|max:255',
             'address_company' => 'required|string',
-            'start_date' => 'required|date|after_or_equal:today',
-            'duration_days' => 'required|numeric|min:1',
+            'note' => 'nullable|string|max:255',
             'selectedMembers' => 'array|max:5'
         ]);
 
@@ -151,8 +128,6 @@ class ActionPanel extends Component
             $this->submission->update([
                 'company_name' => $this->company_name,
                 'address_company' => $this->address_company,
-                'start_date' => $this->start_date,
-                'duration_days' => $this->duration_days,
                 'note' => $this->note,
                 'status' => 'pending', // Reset ke Pending
                 'feedback' => null,
@@ -160,7 +135,7 @@ class ActionPanel extends Component
                 'admin_id' => null,
             ]);
 
-            // 2. Sync Members (FIXED BUG: Representative Hilang)
+            // 2. Sync Members 
             
             // A. Siapkan Array untuk Sync
             $syncData = [];

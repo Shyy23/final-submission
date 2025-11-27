@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('study_programs', function (Blueprint $table) {
             $table->id('study_id');
             $table->string('study_name');
+            $table->string('study_code', 10)->nullable();
             $table->timestamps();
         });
 

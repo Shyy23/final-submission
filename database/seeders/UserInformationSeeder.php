@@ -16,8 +16,8 @@ class UserInformationSeeder extends Seeder
     {
         Position::Create(['position_name' => 'Wakil Dekan 1']);
 
-        StudyProgram::Create(['study_name' => 'Teknik Informatika']);
-        StudyProgram::Create(['study_name' => 'Sistem Informasi']);
-        StudyProgram::Create(['study_name' => 'Kimia']);
+        StudyProgram::Create(['study_name' => 'Informatika', 'study_code' => 'IF']);
+        StudyProgram::Create(['study_name' => 'Sistem Informasi', 'study_code' => 'SI']);
+        StudyProgram::Create(['study_name' => 'Kimia', 'study_code' => 'KI']);
     }
 }

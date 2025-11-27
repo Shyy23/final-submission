@@ -1,38 +1,38 @@
 <?php
 
-                                                                                                                                                                                                use App\Livewire\Actions\Logout;
-                                                                                                                                                                                                use Illuminate\Support\Facades\Auth;
-                                                                                                                                                                                                use Illuminate\Support\Facades\Session;
-                                                                                                                                                                                                use Livewire\Attributes\Layout;
-                                                                                                                                                                                                use Livewire\Volt\Component;
+    use App\Livewire\Actions\Logout;
+    use Illuminate\Support\Facades\Auth;
+    use Illuminate\Support\Facades\Session;
+    use Livewire\Attributes\Layout;
+    use Livewire\Volt\Component;
 
-                                                                                                                                                                                                new #[Layout('layouts.guest')] class extends Component
-                                                                                                                                                                                                {
-                                                                                                                                                                                                    /**
-                                                                                                                                                                                                     * Send an email verification notification to the user.
-                                                                                                                                                                                                     */
-                                                                                                                                                                                                    public function sendVerification(): void
-                                                                                                                                                                                                    {
-                                                                                                                                                                                                        if (Auth::user()->hasVerifiedEmail()) {
-                                                                                                                                                                                                            $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
-                                                                                                                                                                                                            return;
-                                                                                                                                                                                                        }
+    new #[Layout('layouts.guest')] class extends Component
+    {
+        /**
+         * Send an email verification notification to the user.
+         */
+        public function sendVerification(): void
+        {
+            if (Auth::user()->hasVerifiedEmail()) {
+                $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+                return;
+            }
 
-                                                                                                                                                                                                        Auth::user()->sendEmailVerificationNotification();
+        Auth::user()->sendEmailVerificationNotification();
 
-                                                                                                                                                                                                        Session::flash('status', 'verification-link-sent');
-                                                                                                                                                                                                    }
+    Session::flash('status', 'verification-link-sent');
+}
 
-                                                                                                                                                                                                    /**
-                                                                                                                                                                                                     * Log the current user out of the application.
-                                                                                                                                                                                                     */
-                                                                                                                                                                                                    public function logout(Logout $logout): void
-                                                                                                                                                                                                    {
-                                                                                                                                                                                                        $logout();
+    /**
+     * Log the current user out of the application.
+     */
+    public function logout(Logout $logout): void
+    {
+        $logout();
 
-                                                                                                                                                                                                        $this->redirect('/', navigate: true);
-                                                                                                                                                                                                    }
-                                                                                                                                                                                                }; ?>
+        $this->redirect('/', navigate: true);
+    }
+}; ?>
 
 <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
@@ -90,27 +90,35 @@
 
             <!-- Actions -->
             <div class="space-y-4">
-                <!-- Resend Button -->
-                <button wire:click="sendVerification" type="button"
-                    class="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-lg shadow-md transition-all duration-300 transform hover:scale-[1.02]">
-                    <i class="fas fa-paper-plane mr-2"></i>
-                    Kirim Ulang Email Verifikasi
+                <!-- Resend Button with Loading State -->
+                <button wire:click="sendVerification" type="button" wire:loading.attr="disabled"
+                    wire:target="sendVerification"
+                    class="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-lg shadow-md transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed">
+
+                    <span wire:loading.remove wire:target="sendVerification">
+                        <i class="fas fa-paper-plane mr-2"></i> Kirim Ulang Email Verifikasi
+                    </span>
+
+                    <span wire:loading wire:target="sendVerification">
+                        <i class="fas fa-circle-notch fa-spin mr-2"></i> Mengirim...
+                    </span>
                 </button>
 
-                <!-- Logout Button -->
-                <button wire:click="logout" type="button"
-                    class="w-full inline-flex items-center justify-center px-6 py-3 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-lg border border-gray-300 transition-all duration-200">
-                    <i class="fas fa-sign-out-alt mr-2"></i>
-                    Keluar
+                <!-- Logout Button with Loading State -->
+                <button wire:click="logout" type="button" wire:loading.attr="disabled" wire:target="logout"
+                    class="w-full inline-flex items-center justify-center px-6 py-3 bg-white hover:bg-gray-50 text-gray-700 font-medium rounded-lg border border-gray-300 transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed">
+
+                    <span wire:loading.remove wire:target="logout">
+                        <i class="fas fa-sign-out-alt mr-2"></i> Keluar
+                    </span>
+
+                    <span wire:loading wire:target="logout">
+                        <i class="fas fa-circle-notch fa-spin mr-2"></i> Memproses...
+                    </span>
                 </button>
             </div>
 
         </div>
-
-        <!-- Footer Text -->
-        <p class="text-center text-xs text-gray-500">
-            © {{ date('Y') }} Submission System - Tugas Akhir Mahasiswa
-        </p>
 
     </div>
 </div>

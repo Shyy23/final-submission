@@ -1,4 +1,5 @@
-Confirm the current user's password.Confirm the current user's password.<?php
+Confirm the current user's password.Confirm the current user's password.
+<?php
 
                                                                         use Illuminate\Support\Facades\Auth;
                                                                         use Illuminate\Validation\ValidationException;
@@ -77,14 +78,9 @@ Confirm the current user's password.Confirm the current user's password.<?php
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <i class="fas fa-lock text-gray-400"></i>
                         </div>
-                        <x-text-input
-                            wire:model="password"
-                            id="password"
+                        <x-text-input wire:model="password" id="password"
                             class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                            type="password"
-                            name="password"
-                            placeholder="Masukkan password Anda"
-                            required
+                            type="password" name="password" placeholder="Masukkan password Anda" required
                             autocomplete="current-password" />
                     </div>
                     <x-input-error :messages="$errors->get('password')" class="mt-2" />
@@ -92,8 +88,7 @@ Confirm the current user's password.Confirm the current user's password.<?php
 
                 <!-- Confirm Button -->
                 <div class="pt-2">
-                    <button
-                        type="submit"
+                    <button type="submit"
                         class="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-lg shadow-md transition-all duration-300 transform hover:scale-[1.02]">
                         <i class="fas fa-circle-check mr-2"></i>
                         Konfirmasi
@@ -102,8 +97,7 @@ Confirm the current user's password.Confirm the current user's password.<?php
 
                 <!-- Cancel Link -->
                 <div class="text-center pt-4 border-t border-gray-100">
-                    <a
-                        href="{{ route('dashboard') }}"
+                    <a href="{{ route('dashboard') }}"
                         class="text-sm text-gray-600 hover:text-gray-700 font-medium transition-colors duration-200"
                         wire:navigate>
                         <i class="fas fa-arrow-left mr-1"></i>
@@ -113,11 +107,6 @@ Confirm the current user's password.Confirm the current user's password.<?php
 
             </form>
         </div>
-
-        <!-- Footer Text -->
-        <p class="text-center text-xs text-gray-500">
-            © {{ date('Y') }} Submission System - Tugas Akhir Mahasiswa
-        </p>
 
     </div>
 </div>

@@ -1,18 +1,30 @@
-<div> {{-- ROOT ELEMENT PEMBUNGKUS (WAJIB) --}}
+<div>
     <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
         <h3 class="text-lg font-semibold text-gray-800 mb-4">Aksi Admin</h3>
 
         {{-- KASUS 1: STATUS PENDING --}}
         @if($submission->status === 'pending')
         <div class="space-y-3">
+            {{-- Tombol Approve --}}
             <button wire:click="openActionModal('approve')" wire:loading.attr="disabled"
-                class="w-full inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-lg shadow-sm hover:from-emerald-600 hover:to-teal-600 transition-all">
-                <i class="fas fa-check-circle mr-2"></i> Setujui & Buat Dokumen
+                class="w-full inline-flex items-center justify-center px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-lg shadow-sm hover:from-emerald-600 hover:to-teal-600 transition-all disabled:opacity-70 disabled:cursor-not-allowed">
+                <span wire:loading.remove wire:target="openActionModal('approve')">
+                    <i class="fas fa-check-circle mr-2"></i> Setujui & Buat Dokumen
+                </span>
+                <span wire:loading wire:target="openActionModal('approve')">
+                    <i class="fas fa-spinner fa-spin mr-2"></i> Memuat...
+                </span>
             </button>
 
+            {{-- Tombol Reject --}}
             <button wire:click="openRejectModal" wire:loading.attr="disabled"
-                class="w-full inline-flex items-center justify-center px-4 py-3 bg-white border border-red-200 text-red-600 hover:bg-red-50 font-semibold rounded-lg shadow-sm transition-all">
-                <i class="fas fa-reply mr-2"></i> Kembalikan untuk Revisi
+                class="w-full inline-flex items-center justify-center px-4 py-3 bg-white border border-red-200 text-red-600 hover:bg-red-50 font-semibold rounded-lg shadow-sm transition-all disabled:opacity-70 disabled:cursor-not-allowed">
+                <span wire:loading.remove wire:target="openRejectModal">
+                    <i class="fas fa-reply mr-2"></i> Kembalikan untuk Revisi
+                </span>
+                <span wire:loading wire:target="openRejectModal">
+                    <i class="fas fa-spinner fa-spin mr-2"></i> Memuat...
+                </span>
             </button>
         </div>
         @endif
@@ -67,14 +79,24 @@
             <div class="border-t pt-4 mt-2">
                 <h4 class="text-xs font-uppercase text-gray-400 font-bold mb-2">KOREKSI DOKUMEN</h4>
                 <div class="grid grid-cols-2 gap-2">
-                    <button wire:click="openEditModal"
-                        class="flex items-center justify-center px-3 py-2 bg-amber-50 text-amber-700 border border-amber-200 rounded hover:bg-amber-100 text-sm transition-colors">
-                        <i class="fas fa-edit mr-2"></i> Edit Data
+                    <button wire:click="openEditModal" wire:loading.attr="disabled"
+                        class="flex items-center justify-center px-3 py-2 bg-amber-50 text-amber-700 border border-amber-200 rounded hover:bg-amber-100 text-sm transition-colors disabled:opacity-50">
+                        <span wire:loading.remove wire:target="openEditModal">
+                            <i class="fas fa-edit mr-2"></i> Edit Data
+                        </span>
+                        <span wire:loading wire:target="openEditModal">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </span>
                     </button>
 
-                    <button wire:click="confirmDeleteDocument"
-                        class="flex items-center justify-center px-3 py-2 bg-red-50 text-red-700 border border-red-200 rounded hover:bg-red-100 text-sm transition-colors">
-                        <i class="fas fa-trash-alt mr-2"></i> Reset
+                    <button wire:click="confirmDeleteDocument" wire:loading.attr="disabled"
+                        class="flex items-center justify-center px-3 py-2 bg-red-50 text-red-700 border border-red-200 rounded hover:bg-red-100 text-sm transition-colors disabled:opacity-50">
+                        <span wire:loading.remove wire:target="confirmDeleteDocument">
+                            <i class="fas fa-trash-alt mr-2"></i> Reset
+                        </span>
+                        <span wire:loading wire:target="confirmDeleteDocument">
+                            <i class="fas fa-spinner fa-spin"></i>
+                        </span>
                     </button>
                 </div>
             </div>
@@ -91,7 +113,7 @@
         @endif
     </div>
 
-    {{-- MODAL EDIT DATA (Sekarang di dalam Root Element) --}}
+    {{-- MODAL EDIT DATA --}}
     @if($showEditModal)
     <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -103,37 +125,42 @@
                 <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">Edit Data Dokumen</h3>
 
-                    <form wire:submit.prevent="updateAndRegenerate" class="space-y-3">
+                    <form wire:submit.prevent="updateAndRegenerate" class="space-y-4">
+                        {{-- Input Nama Perusahaan --}}
                         <div>
-                            <label class="block text-sm font-medium text-gray-700">Tujuan Surat (Nama
-                                Perusahaan/Instansi)</label>
+                            <label class="block text-sm font-medium text-gray-700">Tujuan Surat (Instansi)</label>
                             <input type="text" wire:model="editData.company_name"
                                 class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                            @error('editData.company_name') <span class="text-red-500 text-xs mt-1">{{ $message
-                                }}</span> @enderror
+                            @error('editData.company_name') <span class="text-red-500 text-xs">{{ $message }}</span>
+                            @enderror
                         </div>
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Tanggal Mulai</label>
-                                <input type="date" wire:model="editData.start_date"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                                @error('editData.start_date') <span class="text-red-500 text-xs mt-1">{{ $message
-                                    }}</span> @enderror
-                            </div>
-                            <div>
-                                <label class="block text-sm font-medium text-gray-700">Durasi (Hari)</label>
-                                <input type="number" wire:model="editData.duration_days"
-                                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
-                                @error('editData.duration_days') <span class="text-red-500 text-xs mt-1">{{ $message
-                                    }}</span> @enderror
-                            </div>
+
+                        {{-- Dropdown Program Studi (UPDATED) --}}
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700">Program Studi (Data Surat)</label>
+                            <select wire:model="editData.department_name"
+                                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                <option value="">-- Pilih Program Studi --</option>
+                                @foreach($studyPrograms as $prodi)
+                                <option value="{{ $prodi->study_name }}">
+                                    {{ $prodi->study_name }} ({{ $prodi->study_code ?? 'XX' }})
+                                </option>
+                                @endforeach
+                            </select>
+                            <p class="text-xs text-gray-500 mt-1">
+                                Kode surat (misal: ND/.../KI-FSI) akan otomatis menyesuaikan dengan pilihan ini.
+                            </p>
+                            @error('editData.department_name') <span class="text-red-500 text-xs">{{ $message }}</span>
+                            @enderror
                         </div>
                     </form>
                 </div>
                 <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                    <button wire:click="updateAndRegenerate" type="button"
-                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 sm:ml-3 sm:w-auto sm:text-sm">
-                        Simpan & Regenerate PDF
+                    <button wire:click="updateAndRegenerate" type="button" wire:loading.attr="disabled"
+                        class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-70">
+                        <span wire:loading.remove wire:target="updateAndRegenerate">Simpan & Regenerate</span>
+                        <span wire:loading wire:target="updateAndRegenerate"><i
+                                class="fas fa-circle-notch fa-spin"></i></span>
                     </button>
                     <button wire:click="$set('showEditModal', false)" type="button"
                         class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
@@ -145,7 +172,7 @@
     </div>
     @endif
 
-    {{-- Modal action (Sekarang di dalam Root Element) --}}
+    {{-- Modal action --}}
     @if($showActionModal)
     <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 backdrop-blur-sm">
         <div class="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 border border-gray-200">
@@ -188,10 +215,15 @@
                         class="px-5 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
                         Batal
                     </button>
-                    <button type="submit"
-                        class="px-5 py-2.5 bg-gradient-to-r from-{{ $actionType === 'approve' ? 'emerald' : 'red' }}-500 to-{{ $actionType === 'approve' ? 'teal' : 'pink' }}-500 hover:from-{{ $actionType === 'approve' ? 'emerald' : 'red' }}-600 hover:to-{{ $actionType === 'approve' ? 'teal' : 'pink' }}-600 text-white text-sm font-semibold rounded-lg transition-all duration-200 shadow-sm">
-                        <i class="fas {{ $actionType === 'approve' ? 'fa-circle-check' : 'fa-times' }} mr-2"></i>
-                        {{ $actionType === 'approve' ? 'Setujui' : 'Tolak' }} Pengajuan
+                    <button type="submit" wire:loading.attr="disabled"
+                        class="px-5 py-2.5 bg-gradient-to-r from-{{ $actionType === 'approve' ? 'emerald' : 'red' }}-500 to-{{ $actionType === 'approve' ? 'teal' : 'pink' }}-500 hover:from-{{ $actionType === 'approve' ? 'emerald' : 'red' }}-600 hover:to-{{ $actionType === 'approve' ? 'teal' : 'pink' }}-600 text-white text-sm font-semibold rounded-lg transition-all duration-200 shadow-sm disabled:opacity-70 disabled:cursor-not-allowed">
+                        <span wire:loading.remove wire:target="processAdminAction">
+                            <i class="fas {{ $actionType === 'approve' ? 'fa-circle-check' : 'fa-times' }} mr-2"></i>
+                            {{ $actionType === 'approve' ? 'Setujui' : 'Tolak' }} Pengajuan
+                        </span>
+                        <span wire:loading wire:target="processAdminAction">
+                            <i class="fas fa-circle-notch fa-spin mr-2"></i> Memproses...
+                        </span>
                     </button>
                 </div>
             </form>

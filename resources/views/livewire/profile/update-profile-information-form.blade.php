@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Livewire\Volt\Component;
 use Livewire\WithFileUploads;
-use Livewire\Attributes\Computed; // TAMBAHKAN INI
+use Livewire\Attributes\Computed;
 
 new class extends Component
 {
@@ -23,14 +23,12 @@ new class extends Component
     // Properti Mahasiswa
     public string $nim = '';
     public $study_id = null;
-    // public $studyPrograms = []; // HAPUS INI (Diganti Computed)
     public $ktm; 
     public $old_ktm_path; 
 
     // Properti Pimpinan
     public string $nid = '';
     public $position_id = null;
-    // public $positions = []; // HAPUS INI (Diganti Computed)
 
     public function mount(): void
     {
@@ -39,9 +37,6 @@ new class extends Component
         $this->email = $user->email;
 
         if ($user->hasRole('mahasiswa')) {
-            // HAPUS PENGISIAN MANUAL ARRAY DI SINI
-            // $this->studyPrograms = ... (Tidak perlu lagi)
-            
             $student = Student::where('user_id', $user->id)->first();
 
             if ($student) {
@@ -52,9 +47,6 @@ new class extends Component
         }
 
         if ($user->hasRole('pimpinan')) {
-            // HAPUS PENGISIAN MANUAL ARRAY DI SINI
-            // $this->positions = ... (Tidak perlu lagi)
-            
             $leader = Leader::where('user_id', $user->id)->first();
             
             if ($leader) {
@@ -64,15 +56,12 @@ new class extends Component
         }
     }
 
-    // TAMBAHKAN COMPUTED PROPERTY UNTUK STUDI
-    // Data ini akan di-cache dan tidak dikirim bolak-balik saat upload
     #[Computed]
     public function studyPrograms()
     {
         return StudyProgram::orderBy('study_name')->get();
     }
 
-    // TAMBAHKAN COMPUTED PROPERTY UNTUK JABATAN
     #[Computed]
     public function positions()
     {
@@ -87,6 +76,9 @@ new class extends Component
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique(User::class)->ignore($user->id)],
         ];
+        
+        // Custom messages untuk validasi NIM
+        $messages = [];
 
         if ($user->hasRole('mahasiswa')) {
             $currentStudentNim = Student::where('user_id', $user->id)->value('nim');
@@ -95,13 +87,26 @@ new class extends Component
                 'nim' => [
                     'required', 
                     'string', 
-                    'min:10', 
-                    'max:11', 
-                    Rule::unique(Student::class, 'nim')->ignore($currentStudentNim, 'nim')
+                    'size:10', // FIX: Wajib 10 karakter sesuai PDF
+                    Rule::unique(Student::class, 'nim')->ignore($currentStudentNim, 'nim'),
+                    // FIX: Regex sesuai aturan SK Rektor UNJANI
+                    // Digit 1: A-H (Fakultas)
+                    // Digit 2: 0-9 (Jurusan)
+                    // Digit 3: 1-2 (Kampus)
+                    // Digit 4: 1-2 (Jalur)
+                    // Digit 5: 0-2 (Semester)
+                    // Digit 6-10: Angka (Tahun & Urut)
+                    'regex:/^[A-H][0-9][1-2][1-2][0-2]\d{5}$/' 
                 ],
                 'study_id' => ['required', 'exists:study_programs,study_id'],
                 'ktm' => ['nullable', 'image', 'max:2048'], 
             ]);
+
+            // Tambahkan pesan error spesifik
+            $messages = [
+                'nim.size' => 'NIM harus berjumlah tepat 10 karakter.',
+                'nim.regex' => 'Format NIM tidak valid (Cth: A311119003). Periksa kode Fakultas/Lokasi/Jalur.',
+            ];
         }
 
         if ($user->hasRole('pimpinan')) {
@@ -111,15 +116,16 @@ new class extends Component
                 'nid' => [
                     'required', 
                     'string', 
-                    'min:10', 
-                    'max:11', 
+                    'min:5', // Sesuaikan jika ada aturan NID
+                    'max:20', 
                     Rule::unique(Leader::class, 'nid')->ignore($currentLeaderNid, 'nid')
                 ],
                 'position_id' => ['required', 'exists:positions,position_id'],
             ]);
         }
 
-        $validated = $this->validate($rules);
+        // Jalankan validasi dengan custom messages
+        $validated = $this->validate($rules, $messages);
 
         $user->fill([
             'name' => $validated['name'],
@@ -203,15 +209,32 @@ new class extends Component
                     required autocomplete="username" />
                 <x-input-error class="mt-2" :messages="$errors->get('email')" />
 
-                {{-- Area Verifikasi Email --}}
+                {{-- Area Verifikasi Email (DIPERBAIKI) --}}
                 @if (auth()->user() instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && !
                 auth()->user()->hasVerifiedEmail())
                 <div class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                    <p class="text-sm text-amber-800">Email belum diverifikasi.
-                        <button wire:click.prevent="sendVerification" class="underline font-bold">Kirim ulang</button>
+                    <p class="text-sm text-amber-800 flex flex-col sm:flex-row sm:items-center gap-2">
+                        <span>Email belum diverifikasi.</span>
+
+                        {{-- TOMBOL DIPERBAIKI: Loading State & Disabled --}}
+                        <button wire:click.prevent="sendVerification" wire:loading.attr="disabled"
+                            wire:target="sendVerification"
+                            class="underline font-bold hover:text-amber-900 disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center">
+
+                            {{-- Teks normal --}}
+                            <span wire:loading.remove wire:target="sendVerification">Kirim ulang link</span>
+
+                            {{-- Teks saat loading --}}
+                            <span wire:loading wire:target="sendVerification" class="flex items-center">
+                                <i class="fas fa-circle-notch fa-spin mr-1"></i> Mengirim...
+                            </span>
+                        </button>
                     </p>
+
                     @if (session('status') === 'verification-link-sent')
-                    <p class="mt-2 text-sm text-emerald-700 font-bold">Link terkirim!</p>
+                    <div class="mt-2 text-sm text-emerald-700 font-bold flex items-center animate-pulse">
+                        <i class="fas fa-check-circle mr-1.5"></i> Link verifikasi baru telah dikirim!
+                    </div>
                     @endif
                 </div>
                 @endif
@@ -235,9 +258,10 @@ new class extends Component
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label for="nim" class="block text-sm font-semibold text-gray-700 mb-2">NIM</label>
+                    {{-- PLACEHOLDER DIPERBAIKI --}}
                     <input wire:model="nim" id="nim" type="text"
                         class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 transition-all"
-                        placeholder="contoh : 1234567890" required />
+                        placeholder="Contoh: A311119003" required />
                     <x-input-error class="mt-2" :messages="$errors->get('nim')" />
                 </div>
 
@@ -247,7 +271,6 @@ new class extends Component
                         class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 transition-all"
                         required>
                         <option value="">-- Pilih Prodi --</option>
-                        {{-- UBAH LOOPING UNTUK MENGGUNAKAN COMPUTED PROPERTY --}}
                         @foreach($this->studyPrograms as $program)
                         <option value="{{ $program->study_id }}">{{ $program->study_name }}</option>
                         @endforeach
@@ -255,7 +278,7 @@ new class extends Component
                     <x-input-error class="mt-2" :messages="$errors->get('study_id')" />
                 </div>
 
-                {{-- UPLOAD KTM DENGAN VALIDASI BROWSER (ANTI-CRASH) --}}
+                {{-- UPLOAD KTM --}}
                 <div class="md:col-span-2" x-data="{ 
                         uploading: false, 
                         progress: 0, 
@@ -264,14 +287,12 @@ new class extends Component
                             const file = event.target.files[0];
                             if (!file) return;
 
-                            // 1. VALIDASI UKURAN DI BROWSER
                             if (file.size > 2 * 1024 * 1024) {
                                 this.errorMessage = 'File terlalu besar! Maksimal 2MB.';
-                                event.target.value = ''; // Reset input
+                                event.target.value = ''; 
                                 return;
                             }
 
-                            // 2. UPLOAD MANUAL
                             this.uploading = true;
                             this.errorMessage = null;
 
@@ -322,7 +343,7 @@ new class extends Component
                         <div class="flex-1">
                             <input type="file" accept="image/png, image/jpeg, image/jpg"
                                 x-on:change="uploadFile($event)"
-                                class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer border border-gray-300 rounded-lg" />
+                                class="block w-full text-sm text-gray-500 file:cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-emerald-50 file:text-emerald-700 hover:file:bg-emerald-100 cursor-pointer border border-gray-300 rounded-lg" />
 
                             <p class="mt-1 text-xs text-gray-500">Format: JPG/PNG. Max 2MB.</p>
 
@@ -340,7 +361,7 @@ new class extends Component
         @endrole
 
         @role('pimpinan')
-        {{-- Pimpinan Data (Tetap sama) --}}
+        {{-- Pimpinan Data --}}
         <div class="pt-6 border-t border-gray-200">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -356,7 +377,6 @@ new class extends Component
                         class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 transition-all"
                         required>
                         <option value="">-- Pilih Jabatan --</option>
-                        {{-- UBAH LOOPING UNTUK MENGGUNAKAN COMPUTED PROPERTY --}}
                         @foreach($this->positions as $pos)
                         <option value="{{ $pos->position_id }}">{{ $pos->position_name }}</option>
                         @endforeach
@@ -369,13 +389,20 @@ new class extends Component
 
         <div class="flex items-center gap-4 pt-6">
             <button type="submit"
-                class="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg shadow-sm transition-all"
-                wire:loading.attr="disabled">
-                <i class="fas fa-save mr-2"></i> Simpan Perubahan
+                class="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold rounded-lg shadow-sm transition-all flex items-center disabled:opacity-70 disabled:cursor-not-allowed"
+                wire:loading.attr="disabled" wire:target="updateProfileInformation">
+
+                <span wire:loading.remove wire:target="updateProfileInformation">
+                    <i class="fas fa-save mr-2"></i> Simpan Perubahan
+                </span>
+                <span wire:loading wire:target="updateProfileInformation">
+                    <i class="fas fa-circle-notch fa-spin mr-2"></i> Menyimpan...
+                </span>
             </button>
+
             <div x-data="{ shown: false }"
                 x-on:profile-updated.window="shown = true; setTimeout(() => shown = false, 3000)" x-show="shown"
-                x-transition
+                x-transition style="display: none;"
                 class="flex items-center px-4 py-2 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200">
                 <i class="fas fa-circle-check mr-2"></i> <span class="text-sm font-medium">Tersimpan!</span>
             </div>

@@ -18,8 +18,6 @@ class SubmissionForm extends Component
     public $company_name;
     public $address_company;
     public $note;
-    public $start_date; 
-    public $duration_days;
 
     // Untuk filtering
     public $selectedStudy = '';
@@ -28,15 +26,12 @@ class SubmissionForm extends Component
     // Untuk selected members
     public $selectedMembers = [];
     public $availableStudents = [];
-    public $isLoading = false;
-    public $endDate = null; 
+    public $isLoading = false; 
 
     protected $rules = [
         'company_name' => 'required|string|max:255',
         'address_company' => 'required|string',
         'note' => 'nullable|string|max:255',
-        'start_date' => 'required|date|after_or_equal:today',
-        'duration_days' => 'required|numeric|min:1|max:365',
         'selectedMembers' => 'array|max:5'
     ];
 
@@ -55,37 +50,6 @@ class SubmissionForm extends Component
         ];
 
         $this->loadAvailableStudents();
-    }
-
-    public function updatedStartDate($value)
-    {
-        $this->calculateEndDate();
-    }
-
-    public function updatedDurationDays($value)
-    {
-        $this->calculateEndDate();
-    }
-
-    private function calculateEndDate()
-    {
-        if ($this->start_date && $this->duration_days !== null && $this->duration_days !== '') {
-            try {
-                $duration = is_numeric($this->duration_days) ? (int) $this->duration_days : 0;
-                
-                if ($duration > 0) {
-                    $startDate = Carbon::parse($this->start_date);
-                    $this->endDate = $startDate->copy()->addDays($duration)->format('d F Y');
-                } else {
-                    $this->endDate = null;
-                }
-            } catch (\Exception $e) {
-                $this->endDate = null;
-                Log::error('Error calculating end date: ' . $e->getMessage());
-            }
-        } else {
-            $this->endDate = null;
-        }
     }
 
     public function loadAvailableStudents()
@@ -178,8 +142,6 @@ class SubmissionForm extends Component
                 'company_name' => $this->company_name,
                 'address_company' => $this->address_company,
                 'note' => $this->note,
-                'start_date' => $this->start_date,
-                'duration_days' => $this->duration_days,
                 'status' => 'pending'
             ]);
 
@@ -192,7 +154,7 @@ class SubmissionForm extends Component
             }
 
             session()->flash('success', 'Submission berhasil dikirim! Silakan tunggu persetujuan Admin.');
-            return redirect()->route('submissions.create');
+            return redirect()->route('submissions.history');
         } catch (\Exception $e) {
             session()->flash('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }

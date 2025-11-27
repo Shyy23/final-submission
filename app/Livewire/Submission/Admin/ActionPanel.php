@@ -4,6 +4,7 @@ namespace App\Livewire\Submission\Admin;
 
 use App\Livewire\Submission\SubmissionDetail;
 use App\Mail\SubmissionStatusNotification;
+use App\Models\StudyProgram;
 use Livewire\Component;
 use App\Models\Submission;
 use Illuminate\Support\Facades\Auth;
@@ -20,22 +21,32 @@ class ActionPanel extends Component
     public $feedback = '';
     public $actionType = ''; // 'approve' or 'reject'
 
+    // DATA EDIT
     public $editData = [
-        'start_date' => '',
-        'duration_days' => '',
         'company_name' => '',
+        'department_name' => '', 
     ];
+
+    public $studyPrograms = []; 
 
     public function mount(Submission $submission)
     {
         $this->submission = $submission;
+        // Ambil data prodi untuk dropdown
+        $this->studyPrograms = StudyProgram::orderBy('study_name')->get();
     }
     
-    // Muat ulang data saat ada event dari parent
     #[On('submission-updated')] 
     public function refreshData()
     {
         $this->submission->refresh();
+    }
+
+    // Helper: Ambil Kode Prodi dari Database
+    private function getStudyCodeFromDB($prodiName)
+    {
+        $prodi = StudyProgram::where('study_name', $prodiName)->first();
+        return $prodi ? $prodi->study_code : null; // Return code atau null
     }
 
     public function openActionModal($type)
@@ -45,7 +56,7 @@ class ActionPanel extends Component
         $this->showActionModal = true;
     }
 
-    // --- FITUR BARU: PREVIEW DOCUMENT ---
+    // --- FITUR : PREVIEW DOCUMENT ---
     public function downloadDocument()
     {
         if (!$this->submission->document_path || !Storage::exists($this->submission->document_path)) {
@@ -74,21 +85,27 @@ class ActionPanel extends Component
         $this->validate();
 
         try {
-            // Simpan status type untuk email (approve/reject)
             $emailStatusType = $this->actionType === 'approve' ? 'approved' : 'rejected';
             
             if ($this->actionType === 'approve') {
-                // 1. Update Status
+                // 1. Tentukan Nama Prodi (Prioritas: yang sudah ada di submission -> representative)
+                $deptName = $this->submission->department_name ?? $this->submission->representative->studyProgram->study_name;
+                
+                // 2. AMBIL KODE DARI DATABASE (Otomatis)
+                $deptCode = $this->getStudyCodeFromDB($deptName) ?? 'XX';
+
+                // 3. Update Submission dengan Data Prodi & Kode yang Valid
                 $this->submission->update([
                     'status' => 'approved',
                     'admin_id' => Auth::id(),
                     'feedback' => $this->feedback,
-                    'sent_to_leader' => false, 
+                    'sent_to_leader' => false,
+                    'department_name' => $deptName,
+                    'department_code' => $deptCode, // Simpan kode agar PDF konsisten
                 ]);
 
-                // 2. Generate PDF
+                // Generate PDF
                 $this->dispatch('generateAndSavePdf', withQr: false)->to(SubmissionDetail::class); 
-                
                 session()->flash('message', 'Pengajuan disetujui. Dokumen berhasil dibuat.');
 
             } else {
@@ -97,25 +114,20 @@ class ActionPanel extends Component
                     'feedback' => $this->feedback,
                     'document_path' => null 
                 ]);
-                
                 session()->flash('message', 'Pengajuan ditolak.');
             }
 
-            // --- LOGIKA KIRIM EMAIL NOTIFIKASI ---
+            // Kirim Email Notifikasi
             try {
                 $representative = $this->submission->representative;
                 if ($representative && $representative->user && $representative->user->email) {
-                    // Kirim Email
                     Mail::to($representative->user->email)->send(
                         new SubmissionStatusNotification($this->submission, $emailStatusType, $this->feedback)
                     );
-                    Log::info("Email notifikasi ($emailStatusType) dikirim ke: " . $representative->user->email);
                 }
             } catch (\Exception $mailEx) {
-                // Jangan hentikan proses hanya karena email gagal
-                Log::error('Gagal mengirim email notifikasi admin: ' . $mailEx->getMessage());
+                Log::error('Gagal kirim email: ' . $mailEx->getMessage());
             }
-            // -------------------------------------
 
             $this->showActionModal = false;
             $this->dispatch('submission-updated'); 
@@ -151,11 +163,13 @@ class ActionPanel extends Component
     // 3. ACTION: EDIT & REGENERATE
     public function openEditModal()
     {
-        // Load data saat ini ke form edit
+        // Load data saat ini
+        $defaultDept = $this->submission->department_name 
+            ?? ($this->submission->representative->studyProgram->study_name ?? '');
+
         $this->editData = [
             'company_name' => $this->submission->company_name,
-            'start_date' => $this->submission->start_date ? $this->submission->start_date->format('Y-m-d') : '',
-            'duration_days' => $this->submission->duration_days,
+            'department_name' => $defaultDept, 
         ];
         $this->showEditModal = true;
     }
@@ -164,8 +178,7 @@ class ActionPanel extends Component
     {
         return [
             'editData.company_name' => 'required|string',
-            'editData.start_date' => 'required|date',
-            'editData.duration_days' => 'required|numeric',
+            'editData.department_name' => 'required|string|exists:study_programs,study_name', // Validasi ke tabel
         ];
     }
 
@@ -174,22 +187,25 @@ class ActionPanel extends Component
         $this->validate($this->editRules());
 
         try {
-            // Update Data di DB
+            // 1. Cari Kode Prodi baru dari DB berdasarkan pilihan Dropdown
+            $newCode = $this->getStudyCodeFromDB($this->editData['department_name']) ?? 'XX';
+
+            // 2. Update Data di DB
             $this->submission->update([
                 'company_name' => $this->editData['company_name'],
-                'start_date' => $this->editData['start_date'],
-                'duration_days' => $this->editData['duration_days'],
+                'department_name' => $this->editData['department_name'],
+                'department_code' => $newCode, // Update kode otomatis
             ]);
 
-            // Regenerate PDF dengan data baru (Tanpa QR)
+            // 3. Regenerate PDF
             $this->dispatch('generateAndSavePdf', withQr: false)->to(SubmissionDetail::class); 
 
             $this->showEditModal = false;
-            session()->flash('message', 'Data diperbarui dan dokumen berhasil dibuat ulang.');
+            session()->flash('message', 'Data diperbarui. Prodi: ' . $this->editData['department_name'] . ' (Kode: ' . $newCode . ')');
             $this->dispatch('submission-updated');
             
         } catch (\Exception $e) {
-            session()->flash('error', 'Gagal update dan regenerate dokumen: ' . $e->getMessage());
+            session()->flash('error', 'Gagal update: ' . $e->getMessage());
         }
     }
 
