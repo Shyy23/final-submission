@@ -47,7 +47,7 @@ new #[Layout('layouts.guest')] class extends Component
             'name' => ['required', 'string', 'max:255'],
             'email' => [
                 'required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class,
-                'regex:/^[a-zA-Z0-9._%+-]+@unjani\.ac\.id$/i'
+                'regex:/^[a-zA-Z0-9._%+-]+@(unjani\.ac\.id|gmail\.com)$/i'
             ],
             'password' => ['required', 'string', 'confirmed', Rules\Password::defaults()],
 
@@ -69,7 +69,7 @@ new #[Layout('layouts.guest')] class extends Component
             'study_id' => ['required', 'integer', 'exists:study_programs,study_id'],
             'ktm' => ['required', 'image', 'max:2048'],
         ], [
-            'email.regex' => 'Pendaftaran hanya diizinkan untuk email mahasiswa (@unjani.ac.id).',
+            'email.regex' => 'Pendaftaran hanya diizinkan untuk email mahasiswa (@unjani.ac.id) atau @gmail.com.',
             'nim.unique' => 'NIM ini sudah terdaftar.',
             'nim.size' => 'NIM harus berjumlah tepat 10 karakter.',
             'nim.regex' => 'Format NIM tidak sesuai standar UNJANI (Cth: A311119003). Periksa kembali digit Fakultas, Lokasi, atau Jalur.',
@@ -105,7 +105,7 @@ new #[Layout('layouts.guest')] class extends Component
 
 
         // UBAH: Redirect ke login dengan pesan sukses
-        session()->flash('status', 'Pendaftaran berhasil! Silakan verifikasi email Anda. Akun Anda akan aktif setelah diverifikasi oleh Admin.');
+        session()->flash('status', 'Pendaftaran berhasil! .Harap tunggu akun anda akan aktif setelah diverifikasi oleh Admin.');
         $this->redirect(route('login'), navigate: true);
     }
 }; ?>
@@ -142,7 +142,8 @@ new #[Layout('layouts.guest')] class extends Component
                 </li>
                 <li class="flex items-start">
                     <i class="fas fa-check-circle text-emerald-500 mt-1 mr-3 flex-shrink-0"></i>
-                    <span>Gunakan email <code class="text-xs bg-gray-200 p-0.5 rounded">@unjani.ac.id</code> yang
+                    <span>Gunakan email <code
+                            class="text-xs bg-gray-200 p-0.5 rounded">@unjani.ac.id atau @gmail.com</code> yang
                         aktif.</span>
                 </li>
                 <li class="flex items-start">
@@ -242,7 +243,7 @@ new #[Layout('layouts.guest')] class extends Component
                         </div>
                         <x-text-input wire:model="email" id="email"
                             class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                            type="email" placeholder="nama@unjani.ac.id" required autocomplete="username" />
+                            type="email" placeholder="masukkan email anda" required autocomplete="username" />
                     </div>
                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
                 </div>

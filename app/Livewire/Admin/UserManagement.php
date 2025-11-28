@@ -92,7 +92,7 @@ class UserManagement extends Component
                 'email',
                 'max:255',
                 'unique:users,email,' . $this->userId,
-                'regex:/^[a-zA-Z0-9._%+-]+@unjani\.ac\.id$/i' // Validasi khusus domain unjani.ac.id
+                'regex:/^[a-zA-Z0-9._%+-]+@(unjani\.ac\.id|gmail\.com)$/i' 
             ],
             'role' => 'required|in:mahasiswa,admin,pimpinan',
         ];

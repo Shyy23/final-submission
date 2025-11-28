@@ -86,7 +86,7 @@ new #[Layout('layouts.guest')] class extends Component
                         </div>
                         <x-text-input wire:model="email" id="email"
                             class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200"
-                            type="email" name="email" placeholder="nama@unjani.ac.id" required autofocus />
+                            type="email" name="email" placeholder="masukkan email anda" required autofocus />
                     </div>
                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
                 </div>

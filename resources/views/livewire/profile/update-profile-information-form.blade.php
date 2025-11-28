@@ -366,7 +366,7 @@ new class extends Component
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">NID</label>
-                    <input wire:model="nid" type="text"
+                    <input wire:model="nid" type="text" placeholder="Cth:1234567890"
                         class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 transition-all"
                         required />
                     <x-input-error class="mt-2" :messages="$errors->get('nid')" />
@@ -374,7 +374,7 @@ new class extends Component
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Jabatan</label>
                     <select wire:model="position_id"
-                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 transition-all"
+                        class="w-full px-4 py-2.5 border cursor-pointer border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 transition-all"
                         required>
                         <option value="">-- Pilih Jabatan --</option>
                         @foreach($this->positions as $pos)

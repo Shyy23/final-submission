@@ -280,14 +280,14 @@
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
-                            <input type="text" wire:model="name"
+                            <input type="text" wire:model="name" placeholder="Masukkan Nama"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm">
                             @error('name') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                         </div>
 
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                            <input type="email" wire:model="email"
+                            <input type="email" wire:model="email" placeholder="Masukkan Email"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm">
                             @error('email') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                         </div>
@@ -295,7 +295,7 @@
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Role</label>
                             <select wire:model="role"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm">
+                                class="w-full px-3 py-2 border cursor-pointer border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-sm">
                                 <option value="">Pilih Role</option>
                                 <option value="mahasiswa">Mahasiswa</option>
                                 <option value="admin">Admin</option>
