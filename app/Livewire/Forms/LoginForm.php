@@ -46,16 +46,6 @@ class LoginForm extends Form
 
         // 3. Cek apakah user sudah diverifikasi oleh Admin
         if (! $user->is_verified) {
-            // Kita bisa beri pesan error yang lebih spesifik
-            
-            // Cek apakah email-nya sudah diverifikasi
-            if (! $user->hasVerifiedEmail()) {
-                throw ValidationException::withMessages([
-                    'form.email' => 'Email Anda belum diverifikasi. Silakan cek inbox Anda.',
-                ]);
-            }
-
-            // Jika email sudah, tapi admin belum
             throw ValidationException::withMessages([
                 'form.email' => 'Akun Anda sedang menunggu persetujuan Admin.',
             ]);

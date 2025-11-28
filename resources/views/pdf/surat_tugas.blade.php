@@ -192,7 +192,7 @@ $currentYear = date('Y');
             font-size: 10pt;
             vertical-align: bottom;
             /* UPDATE: Margin top diperbesar lagi agar turun lebih jauh */
-            margin-top: 100px;
+            margin-top: 130px;
         }
 
         /* KOLOM KANAN: TTD & QR */
@@ -213,7 +213,7 @@ $currentYear = date('Y');
             text-align: right;
             /* Geser konten ke kanan */
             /* UPDATE: Tambah jarak dari TTD */
-            margin-top: 40px;
+            margin-top: 60px;
         }
 
         /* Tabel QR Inner */

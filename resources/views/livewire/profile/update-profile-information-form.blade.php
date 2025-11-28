@@ -268,7 +268,7 @@ new class extends Component
                 <div>
                     <label for="study_id" class="block text-sm font-semibold text-gray-700 mb-2">Program Studi</label>
                     <select wire:model="study_id" id="study_id"
-                        class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 transition-all"
+                        class="w-full px-4 py-2.5 border cursor-pointer border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 transition-all"
                         required>
                         <option value="">-- Pilih Prodi --</option>
                         @foreach($this->studyPrograms as $program)

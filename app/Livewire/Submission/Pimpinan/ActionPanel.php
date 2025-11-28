@@ -61,7 +61,7 @@ class ActionPanel extends Component
             $fullQrPath = $path . '/' . $qrFileName;
 
             // 2. URL Validasi & Logo
-            $verificationUrl = route('submissions.show', $identifier);
+            $verificationUrl = route('submissions.verification', ['id' => $identifier]);
             $logoPath = public_path('assets/img/unjani.png');
 
             // 3. GENERATE QR CODE

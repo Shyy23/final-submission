@@ -222,7 +222,7 @@ new #[Layout('layouts.guest')] class extends Component
                             <i class="fas fa-graduation-cap text-gray-400"></i>
                         </div>
                         <select wire:model="study_id" id="study_id" name="study_id"
-                            class="block w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 bg-white"
+                            class="block cursor-pointer w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-200 bg-white"
                             required>
                             <option value="">Pilih program studi...</option>
                             @foreach($prodiOptions as $prodi)

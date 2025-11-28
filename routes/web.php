@@ -7,6 +7,7 @@ use App\Livewire\Submission\SubmissionDetail;
 use App\Livewire\SubmissionForm;
 use App\Livewire\SubmissionList;
 use Illuminate\Support\Facades\Route;
+use Livewire\Volt\Volt;
 
 Route::view('/', 'welcome')->name('home');
 
@@ -37,8 +38,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/submissions/detail/{id}', SubmissionDetail::class)->name('submissions.show');
 });
 
-// Route untuk verifikasi publik (tanpa auth) - INI YANG BARU
-Route::get('/verify/submission/{id}', [SubmissionController::class, 'showVerification'])
+// Route Verifikasi Publik (Tanpa Middleware Auth)
+Volt::route('/verify/submission/{id}', 'submission.verification')
     ->name('submissions.verification');
 
 require __DIR__ . '/auth.php';

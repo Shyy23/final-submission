@@ -142,7 +142,6 @@ class SubmissionForm extends Component
                 'company_name' => $this->company_name,
                 'address_company' => $this->address_company,
                 'note' => $this->note,
-                'status' => 'pending'
             ]);
 
             foreach ($this->selectedMembers as $member) {

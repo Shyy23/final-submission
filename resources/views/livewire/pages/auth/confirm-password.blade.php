@@ -1,38 +1,37 @@
-Confirm the current user's password.Confirm the current user's password.
 <?php
 
-                                                                        use Illuminate\Support\Facades\Auth;
-                                                                        use Illuminate\Validation\ValidationException;
-                                                                        use Livewire\Attributes\Layout;
-                                                                        use Livewire\Volt\Component;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\ValidationException;
+use Livewire\Attributes\Layout;
+use Livewire\Volt\Component;
 
-                                                                        new #[Layout('layouts.guest')] class extends Component
-                                                                        {
-                                                                            public string $password = '';
+new #[Layout('layouts.guest')] class extends Component
+{
+    public string $password = '';
 
-                                                                            /**
-                                                                             * Confirm the current user's password.
-                                                                             */
-                                                                            public function confirmPassword(): void
-                                                                            {
-                                                                                $this->validate([
-                                                                                    'password' => ['required', 'string'],
-                                                                                ]);
+/**
+ * Confirm the current user's password.
+ */
+public function confirmPassword(): void
+{
+    $this->validate([
+        'password' => ['required', 'string'],
+    ]);
 
-                                                                                if (! Auth::guard('web')->validate([
-                                                                                    'email' => Auth::user()->email,
-                                                                                    'password' => $this->password,
-                                                                                ])) {
-                                                                                    throw ValidationException::withMessages([
-                                                                                        'password' => __('auth.password'),
-                                                                                    ]);
-                                                                                }
+    if (! Auth::guard('web')->validate([
+        'email' => Auth::user()->email,
+        'password' => $this->password,
+    ])) {
+        throw ValidationException::withMessages([
+            'password' => __('auth.password'),
+        ]);
+    }
 
-                                                                                session(['auth.password_confirmed_at' => time()]);
+        session(['auth.password_confirmed_at' => time()]);
 
-                                                                                $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
-                                                                            }
-                                                                        }; ?>
+        $this->redirectIntended(default: route('dashboard', absolute: false), navigate: true);
+    }
+}; ?>
 
 <div class="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
     <div class="max-w-md w-full space-y-8">
@@ -88,10 +87,20 @@ Confirm the current user's password.Confirm the current user's password.
 
                 <!-- Confirm Button -->
                 <div class="pt-2">
-                    <button type="submit"
-                        class="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-lg shadow-md transition-all duration-300 transform hover:scale-[1.02]">
-                        <i class="fas fa-circle-check mr-2"></i>
-                        Konfirmasi
+                    <button type="submit" wire:loading.attr="disabled"
+                        class="w-full inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-semibold rounded-lg shadow-md transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none">
+
+                        <!-- Normal State -->
+                        <span wire:loading.remove wire:target="confirmPassword" class="flex items-center">
+                            <i class="fas fa-circle-check mr-2"></i>
+                            Konfirmasi
+                        </span>
+
+                        <!-- Loading State -->
+                        <span wire:loading wire:target="confirmPassword" class="flex items-center">
+                            <i class="fas fa-circle-notch fa-spin mr-2"></i>
+                            Memproses...
+                        </span>
                     </button>
                 </div>
 
